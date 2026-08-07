@@ -17,8 +17,8 @@
 #include <iterator>
 
 #ifdef Q_OS_WIN
-#include <TlHelp32.h>
 #include <windows.h>
+#include <TlHelp32.h>
 #endif
 
 namespace

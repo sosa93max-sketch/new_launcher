@@ -28,6 +28,9 @@ Source 2 rechaza la siguiente.
 ## Verificación
 
 - `git diff --check` y revisión estática de las rutas pasan en este entorno.
+- El primer build con Qt 6.11.1 MinGW detectó que `TlHelp32.h` se incluía antes
+  de `windows.h`; el orden de los headers queda corregido en el commit de
+  seguimiento para que MinGW conozca `HANDLE`, `DWORD` y `PROCESSENTRY32W`.
 - El build requiere Qt 6 y CMake/compilador de Windows; no están instalados en
   este entorno Linux, por lo que debe ejecutarse en Windows/CI.
 - Prueba manual: iniciar con cuenta A, cerrar el juego, iniciar con cuenta B y
