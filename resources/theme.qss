@@ -1,0 +1,175 @@
+QWidget {
+    background-color: #0d1117;
+    color: #e6edf3;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 13px;
+}
+
+QMainWindow, QDialog {
+    background-color: #0d1117;
+}
+
+QLabel#TitleLabel {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+QLabel#SubtitleLabel {
+    color: #8b949e;
+    font-size: 12px;
+}
+
+QLabel#SectionLabel {
+    color: #58a6ff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+QLabel#StatusOnline {
+    color: #3fb950;
+    font-weight: 700;
+}
+
+QLabel#StatusOffline {
+    color: #f85149;
+    font-weight: 700;
+}
+
+QLabel#ErrorLabel {
+    color: #f85149;
+}
+
+QLineEdit, QComboBox, QSpinBox {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 6px 8px;
+    selection-background-color: #1f6feb;
+}
+
+QLineEdit:focus, QComboBox:focus, QSpinBox:focus {
+    border: 1px solid #58a6ff;
+}
+
+QLineEdit[echoMode="2"] {
+    /* password fields keep the same look */
+}
+
+QPushButton {
+    background-color: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 7px 16px;
+    font-weight: 600;
+}
+
+QPushButton:hover {
+    background-color: #30363d;
+}
+
+QPushButton:pressed {
+    background-color: #161b22;
+}
+
+QPushButton:disabled {
+    color: #6e7681;
+    background-color: #161b22;
+}
+
+QPushButton#AccentButton {
+    background-color: #1f6feb;
+    border: 1px solid #1f6feb;
+    color: #ffffff;
+    font-size: 15px;
+}
+
+QPushButton#AccentButton:hover {
+    background-color: #388bfd;
+}
+
+QPushButton#DangerButton {
+    background-color: #da3633;
+    border: 1px solid #da3633;
+    color: #ffffff;
+}
+
+QPushButton#GhostButton {
+    background-color: transparent;
+    border: 1px solid #30363d;
+    color: #c9d1d9;
+}
+
+QGroupBox {
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    margin-top: 14px;
+    padding-top: 10px;
+    font-weight: 700;
+    color: #8b949e;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    padding: 0 4px;
+}
+
+QCheckBox {
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    background-color: #161b22;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #1f6feb;
+    border-color: #1f6feb;
+}
+
+QStatusBar {
+    background-color: #161b22;
+    color: #8b949e;
+}
+
+QListWidget {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    outline: none;
+}
+
+QListWidget::item {
+    padding: 6px 8px;
+    border-radius: 4px;
+}
+
+QListWidget::item:selected {
+    background-color: #1f6feb;
+    color: #ffffff;
+}
+
+QListWidget::item:hover:!selected {
+    background-color: #21262d;
+}
+
+QScrollBar:vertical {
+    background: #0d1117;
+    width: 10px;
+}
+
+QScrollBar::handle:vertical {
+    background: #30363d;
+    border-radius: 5px;
+    min-height: 24px;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0;
+}
