@@ -256,7 +256,10 @@ void MainWindow::validateCurrentSession()
 
 bool MainWindow::addAccount()
 {
-    LoginDialog dialog(m_store.config(), m_server, this);
+    // No owner window: an owned (parented) dialog gets no taskbar button on
+    // Windows. A parentless application-modal dialog is still modal and appears
+    // in the taskbar, so it can be minimized and restored normally.
+    LoginDialog dialog(m_store.config(), m_server);
     if (dialog.exec() != QDialog::Accepted)
         return false;
 
