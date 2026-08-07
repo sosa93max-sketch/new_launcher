@@ -1,0 +1,12 @@
+build/
+cmake-build-*/
+CMakeLists.txt.user
+.qt/
+.idea/
+.vscode/
+*.user
+*.suo
+*.VC.db
+steam_api*.dll
+payload/
+*.log
