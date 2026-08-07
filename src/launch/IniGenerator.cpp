@@ -16,24 +16,17 @@ QString boolText(bool value)
 
 namespace IniGenerator
 {
-QString skynetDir(const QString &dota2ExePath)
+QString d2maxDir(const QString &dota2ExePath)
 {
-    // .../game/bin/win64/dota2.exe -> .../game/SKYNET
-    const QFileInfo exeInfo(dota2ExePath);
-    if (exeInfo.fileName().compare(QStringLiteral("dota2.exe"), Qt::CaseInsensitive) == 0)
-    {
-        const QFileInfo gameInfo(
-            QDir(exeInfo.absolutePath()).filePath(QStringLiteral("../..")));
-        if (gameInfo.fileName().compare(QStringLiteral("game"), Qt::CaseInsensitive) == 0)
-            return QDir(gameInfo.absoluteFilePath()).filePath(QStringLiteral("SKYNET"));
-    }
-
-    return QDir(exeInfo.absolutePath()).filePath(QStringLiteral("SKYNET"));
+    // The shim uses Process.MainModule.FileName, so for the normal install
+    // layout this is .../game/bin/win64/D2MAX, not .../game/D2MAX.
+    return QDir(QFileInfo(dota2ExePath).absolutePath())
+        .filePath(QStringLiteral("D2MAX"));
 }
 
 QString iniPath(const QString &dota2ExePath)
 {
-    return QDir(skynetDir(dota2ExePath)).filePath(QStringLiteral("steam_api.ini"));
+    return QDir(d2maxDir(dota2ExePath)).filePath(QStringLiteral("steam_api.ini"));
 }
 
 bool write(const QString &dota2ExePath,
@@ -86,7 +79,7 @@ bool write(const QString &dota2ExePath,
 
     out.flush();
 
-    const QString dir = skynetDir(dota2ExePath);
+    const QString dir = d2maxDir(dota2ExePath);
     if (!QDir().mkpath(dir))
     {
         if (error)
@@ -101,7 +94,14 @@ bool write(const QString &dota2ExePath,
             *error = QStringLiteral("No se pudo escribir %1").arg(iniPath(dota2ExePath));
         return false;
     }
-    file.write(content.toUtf8());
-    return file.commit();
+    const auto bytes = content.toUtf8();
+    if (file.write(bytes) != bytes.size() || !file.commit())
+    {
+        if (error)
+            *error = QStringLiteral("No se pudo confirmar %1").arg(iniPath(dota2ExePath));
+        return false;
+    }
+
+    return true;
 }
 }

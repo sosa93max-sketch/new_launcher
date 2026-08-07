@@ -14,7 +14,10 @@
 #include <QFileInfo>
 #include <QStandardPaths>
 
+#include <iterator>
+
 #ifdef Q_OS_WIN
+#include <TlHelp32.h>
 #include <windows.h>
 #endif
 
@@ -24,6 +27,104 @@ QString payloadFile(const QString &directory)
 {
     return QDir(directory).filePath(QStringLiteral("steam_api64.dll"));
 }
+
+#ifdef Q_OS_WIN
+QString normalizedWindowsPath(const QString &path)
+{
+    return QDir::cleanPath(QDir::fromNativeSeparators(
+                               QFileInfo(path).absoluteFilePath()))
+        .toLower();
+}
+
+bool terminateStaleGameProcesses(const QString &dota2ExePath, QString *error)
+{
+    const QString targetPath = normalizedWindowsPath(dota2ExePath);
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snapshot == INVALID_HANDLE_VALUE)
+    {
+        if (error)
+            *error = QStringLiteral("No se pudieron inspeccionar los procesos de Dota 2");
+        return false;
+    }
+
+    PROCESSENTRY32W entry{};
+    entry.dwSize = sizeof(entry);
+    bool ok = true;
+
+    if (Process32FirstW(snapshot, &entry))
+    {
+        do
+        {
+            if (_wcsicmp(entry.szExeFile, L"dota2.exe") != 0 ||
+                entry.th32ProcessID == GetCurrentProcessId())
+            {
+                continue;
+            }
+
+            HANDLE process = OpenProcess(
+                PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_TERMINATE | SYNCHRONIZE,
+                FALSE,
+                entry.th32ProcessID);
+            if (process == nullptr)
+            {
+                // Protected/system processes are not candidates we can safely
+                // identify by path, so leave them untouched.
+                continue;
+            }
+
+            wchar_t imagePath[32768]{};
+            DWORD imagePathLength = static_cast<DWORD>(std::size(imagePath));
+            const bool hasPath = QueryFullProcessImageNameW(
+                process, 0, imagePath, &imagePathLength) != FALSE;
+            const bool sameInstallation = hasPath &&
+                normalizedWindowsPath(QString::fromWCharArray(imagePath, imagePathLength)) ==
+                    targetPath;
+
+            if (sameInstallation)
+            {
+                DWORD exitCode = STILL_ACTIVE;
+                const bool queried = GetExitCodeProcess(process, &exitCode) != FALSE;
+                if (queried && exitCode == STILL_ACTIVE)
+                {
+                    Log::line(QStringLiteral("LAUNCH limpiando proceso residual pid=%1")
+                                  .arg(entry.th32ProcessID));
+                    if (TerminateProcess(process, 1) == FALSE)
+                    {
+                        const DWORD terminateError = GetLastError();
+                        DWORD afterFailure = STILL_ACTIVE;
+                        if (GetExitCodeProcess(process, &afterFailure) == FALSE ||
+                            afterFailure == STILL_ACTIVE)
+                        {
+                            ok = false;
+                            if (error)
+                            {
+                                *error = QStringLiteral(
+                                             "No se pudo cerrar dota2.exe residual (PID %1, error %2)")
+                                             .arg(entry.th32ProcessID)
+                                             .arg(terminateError);
+                            }
+                        }
+                    }
+                    else if (WaitForSingleObject(process, 5000) != WAIT_OBJECT_0)
+                    {
+                        ok = false;
+                        if (error)
+                            *error = QStringLiteral(
+                                         "dota2.exe residual (PID %1) no terminó en 5 segundos")
+                                         .arg(entry.th32ProcessID);
+                    }
+                }
+            }
+
+            CloseHandle(process);
+        }
+        while (ok && Process32NextW(snapshot, &entry));
+    }
+
+    CloseHandle(snapshot);
+    return ok;
+}
+#endif
 }
 
 GameLauncher::GameLauncher(QObject *parent)
@@ -82,6 +183,14 @@ LaunchOutcome GameLauncher::launch(const QString &dota2ExePath,
     if (payload.isEmpty())
         return {false, 0, nullptr,
                 QStringLiteral("steam_api64.dll no está junto al launcher (payload faltante)")};
+
+#ifdef Q_OS_WIN
+    QString staleProcessError;
+    if (!terminateStaleGameProcesses(dota2ExePath, &staleProcessError))
+    {
+        return {false, 0, nullptr, staleProcessError};
+    }
+#endif
 
     QString error;
     if (!IniGenerator::write(dota2ExePath, serverUrl, config.clientInstanceId,

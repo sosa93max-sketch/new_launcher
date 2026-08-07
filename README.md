@@ -26,7 +26,8 @@ reescrito en **Qt 6 / C++** (Widgets + Network).
   import estático, sin tocar la carpeta del juego. El payload se copia a un
   shadow path en `%TEMP%`.
 - **Opciones de lanzamiento**: `-console`, `-novid`, `-insecure`.
-- **steam_api.ini por partida**: se escribe en `<game>\SKYNET\steam_api.ini`
+- **steam_api.ini por partida**: se escribe en la carpeta que realmente lee el
+  shim: `<dota2.exe dir>\D2MAX\steam_api.ini`
   con AppId 570, ServerUrl, identidad de la cuenta activa
   (`FallbackAccountId` / `FallbackPersonaName`), `SecureNetworking=false`, etc.
 - **Modo headless de prueba** (pensado para CI): `D2MaxLauncher.exe --launch <ruta a dota2.exe>`.
@@ -57,7 +58,7 @@ El ejecutable queda en `build/Release/D2MaxLauncher.exe`. Copia
    server responde `{SteamId, AccountId, Token}` (los usuarios se registran al
    primer login).
 2. Cada login crea/actualiza un **perfil** local. Al jugar, el launcher escribe
-   `steam_api.ini` con el `FallbackAccountId` del perfil activo; el shim
+   `D2MAX\steam_api.ini` con el `FallbackAccountId` del perfil activo; el shim
    inyectado hace el logon del juego contra ese usuario del server D2.
 3. El juego arranca suspendido, se inyecta `steam_api64.dll` (o se redirige el
    import estático si `dota2.exe` lo importa directamente) y se reanuda.
