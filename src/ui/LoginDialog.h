@@ -38,7 +38,7 @@ private:
     ServerClient &m_server;
 
     QLineEdit *m_serverUrl = nullptr;
-    QLineEdit *m_username = nullptr;
+    QLineEdit *m_usernameEdit = nullptr;
     QLineEdit *m_password = nullptr;
     QCheckBox *m_remember = nullptr;
     QLabel *m_status = nullptr;

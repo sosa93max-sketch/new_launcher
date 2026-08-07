@@ -79,7 +79,7 @@ public:
     }
 
     bool ok() const { return m_ok; }
-    Arch arch() const { return m_arch; }
+    PeUtils::Arch arch() const { return m_arch; }
     int pointerSize() const { return m_pointerSize; }
 
     QVector<QString> importedModules() const
@@ -213,7 +213,7 @@ private:
         return -1;
     }
 
-    QFile m_file;
+    mutable QFile m_file;
     bool m_ok = false;
     PeUtils::Arch m_arch = PeUtils::Arch::Unknown;
     int m_pointerSize = 0;
