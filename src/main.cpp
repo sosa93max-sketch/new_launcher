@@ -5,6 +5,7 @@
 
 #include <QApplication>
 #include <QFile>
+#include <QIcon>
 
 namespace
 {
@@ -29,6 +30,7 @@ int main(int argc, char *argv[])
     QApplication::setApplicationName(QStringLiteral("D2Max Launcher"));
     QApplication::setOrganizationName(QStringLiteral("D2Max"));
     QApplication::setApplicationVersion(QStringLiteral("1.0.0"));
+    QApplication::setWindowIcon(QIcon(QStringLiteral(":/appicon-256.png")));
 
     QFile qss(QStringLiteral(":/theme.qss"));
     if (qss.open(QIODevice::ReadOnly))

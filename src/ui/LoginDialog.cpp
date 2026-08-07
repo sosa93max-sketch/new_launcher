@@ -27,6 +27,7 @@ LoginDialog::LoginDialog(AppConfig &config, ServerClient &server, QWidget *paren
     setWindowFlags(Qt::FramelessWindowHint | Qt::Window);
     setAttribute(Qt::WA_TranslucentBackground);
     setModal(true);
+    setWindowIcon(QIcon(QStringLiteral(":/appicon-256.png")));
 
     auto *root = new QWidget(this);
     root->setObjectName(QStringLiteral("LoginRoot"));
@@ -147,7 +148,7 @@ void LoginDialog::buildUi()
     headerLayout->setSpacing(8);
 
     auto *logo = new QLabel(m_header);
-    logo->setPixmap(QIcon(QStringLiteral(":/icons/logo.svg")).pixmap(30, 30));
+    logo->setPixmap(QIcon(QStringLiteral(":/appicon-256.png")).pixmap(30, 30));
     auto *brand = new QLabel(QStringLiteral("D2MAX"), m_header);
     brand->setObjectName(QStringLiteral("LoginBrand"));
 

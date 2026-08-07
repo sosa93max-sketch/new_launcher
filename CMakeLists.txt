@@ -35,6 +35,11 @@ qt_add_executable(D2MaxLauncher WIN32
     resources/resources.qrc
 )
 
+if(WIN32)
+    # Embeds the application icon into the executable (Explorer, taskbar, alt-tab).
+    target_sources(D2MaxLauncher PRIVATE resources/app.rc)
+endif()
+
 target_link_libraries(D2MaxLauncher PRIVATE Qt6::Widgets Qt6::Network)
 
 set_target_properties(D2MaxLauncher PROPERTIES

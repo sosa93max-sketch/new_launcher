@@ -10,5 +10,6 @@
         <file>icons/eye.svg</file>
         <file>icons/eye-off.svg</file>
         <file>icons/check.svg</file>
+        <file>appicon-256.png</file>
     </qresource>
 </RCC>
