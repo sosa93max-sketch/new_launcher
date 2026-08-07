@@ -31,6 +31,12 @@ public:
     /// GET /api/users/me with the bearer token, to validate a saved session.
     void me(const QString &token);
 
+    /// GET /api/users/me/rank — the caller's MMR and medal.
+    void fetchRank(const QString &token);
+
+    /// GET /api/users/{steamId}/avatar — the avatar PNG bytes.
+    void fetchAvatar(quint64 steamId, const QString &token);
+
     /// POST /api/presence/offline: tells the server the account went offline.
     /// Fire-and-forget unless waitForDelivery is set (used on app close, so the
     /// server sees the account go offline before the process exits).
@@ -42,6 +48,8 @@ signals:
                        quint64 steamId, quint32 accountId);
     void meFinished(bool ok, const QString &error, const QString &personaName,
                     quint32 accountId, quint64 steamId, int playerLevel);
+    void rankFinished(bool ok, int mmr, int rankTier, int rankStar);
+    void avatarFinished(bool ok, const QByteArray &png);
 
 private:
     QNetworkReply *postJson(const QString &path, const QJsonObject &body);

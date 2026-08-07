@@ -8,7 +8,6 @@
 #include <QTimer>
 
 class QCheckBox;
-class QComboBox;
 class QLabel;
 class QLineEdit;
 class QPushButton;
@@ -33,7 +32,6 @@ private:
     /// Applies an accepted login dialog to the profile store.
     bool applyAccount(class LoginDialog &dialog);
     void buildUi();
-    void rebuildProfiles();
     void applyCurrentProfile();
     void validateCurrentSession();
     void logout();
@@ -46,9 +44,10 @@ private:
     ServerClient &m_server;
     GameLauncher m_launcher;
 
-    QComboBox *m_accountCombo = nullptr;
+    QLabel *m_avatar = nullptr;
     QLabel *m_accountName = nullptr;
     QLabel *m_accountMeta = nullptr;
+    QLabel *m_rankLabel = nullptr;
     QLabel *m_level = nullptr;
     QLabel *m_statusLabel = nullptr;
     QLineEdit *m_serverUrl = nullptr;

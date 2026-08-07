@@ -21,6 +21,9 @@ static const QLatin1String KeyAccountId("AccountId");
 static const QLatin1String KeyPersonaName("PersonaName");
 static const QLatin1String KeyPlayerLevel("PlayerLevel");
 static const QLatin1String KeyVersion("Version");
+static const QLatin1String KeyMmr("Mmr");
+static const QLatin1String KeyRankTier("RankTier");
+static const QLatin1String KeyRankStar("RankStar");
 
 namespace
 {
@@ -150,6 +153,43 @@ void ServerClient::me(const QString &token)
         const auto playerLevel = object.value(KeyPlayerLevel).toInt(0);
         reply->deleteLater();
         emit meFinished(true, QString(), personaName, accountId, steamId, playerLevel);
+    });
+}
+
+void ServerClient::fetchRank(const QString &token)
+{
+    auto *reply = getJson(QStringLiteral("api/users/me/rank"), token);
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        if (reply->error() != QNetworkReply::NoError)
+        {
+            emit rankFinished(false, 0, 1, 1);
+            reply->deleteLater();
+            return;
+        }
+
+        const auto object = QJsonDocument::fromJson(reply->readAll()).object();
+        const int mmr = object.value(KeyMmr).toInt(0);
+        const int tier = object.value(KeyRankTier).toInt(1);
+        const int star = object.value(KeyRankStar).toInt(1);
+        reply->deleteLater();
+        emit rankFinished(true, mmr, tier, star);
+    });
+}
+
+void ServerClient::fetchAvatar(quint64 steamId, const QString &token)
+{
+    auto *reply = getJson(QStringLiteral("api/users/%1/avatar").arg(steamId), token);
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        if (reply->error() != QNetworkReply::NoError)
+        {
+            emit avatarFinished(false, QByteArray());
+            reply->deleteLater();
+            return;
+        }
+
+        const QByteArray png = reply->readAll();
+        reply->deleteLater();
+        emit avatarFinished(!png.isEmpty(), png);
     });
 }
 

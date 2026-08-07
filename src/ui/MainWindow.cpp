@@ -16,11 +16,45 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QPainter>
+#include <QPainterPath>
+#include <QPixmap>
 #include <QPushButton>
+#include <QStringList>
 #include <QStatusBar>
 #include <QVBoxLayout>
 
 #include <algorithm>
+
+namespace
+{
+QString medalName(int tier)
+{
+    static const QStringList names = {
+        QStringLiteral("Herald"), QStringLiteral("Guardian"), QStringLiteral("Crusader"),
+        QStringLiteral("Archon"), QStringLiteral("Legend"), QStringLiteral("Ancient"),
+        QStringLiteral("Divine"), QStringLiteral("Immortal")};
+    return (tier >= 1 && tier <= names.size()) ? names.at(tier - 1) : QStringLiteral("Herald");
+}
+
+QPixmap circularAvatar(const QByteArray &png, int size)
+{
+    QPixmap source;
+    if (!source.loadFromData(png))
+        return {};
+    source = source.scaled(size, size, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+
+    QPixmap result(size, size);
+    result.fill(Qt::transparent);
+    QPainter painter(&result);
+    painter.setRenderHint(QPainter::Antialiasing);
+    QPainterPath path;
+    path.addEllipse(0, 0, size, size);
+    painter.setClipPath(path);
+    painter.drawPixmap(-(source.width() - size) / 2, -(source.height() - size) / 2, source);
+    return result;
+}
+}
 
 MainWindow::MainWindow(ConfigStore &store, ServerClient &server, QWidget *parent)
     : QMainWindow(parent)
@@ -31,7 +65,6 @@ MainWindow::MainWindow(ConfigStore &store, ServerClient &server, QWidget *parent
     resize(860, 620);
     buildUi();
 
-    rebuildProfiles();
     applyCurrentProfile();
 
     m_statusTimer.setInterval(3000);
@@ -74,20 +107,34 @@ void MainWindow::buildUi()
     auto *accountBox = new QGroupBox(QStringLiteral("CUENTA"), central);
     auto *accountLayout = new QVBoxLayout(accountBox);
     auto *accountRow = new QHBoxLayout;
-    m_accountCombo = new QComboBox(accountBox);
-    m_accountCombo->setMinimumWidth(260);
+
+    m_avatar = new QLabel(accountBox);
+    m_avatar->setFixedSize(64, 64);
+    m_avatar->setAlignment(Qt::AlignCenter);
+    m_avatar->setStyleSheet(QStringLiteral(
+        "border-radius: 32px; background: #1f6feb; color: white;"
+        "font-size: 26px; font-weight: 700;"));
+    m_avatar->setText(QStringLiteral("?"));
+
+    auto *infoCol = new QVBoxLayout;
     m_accountName = new QLabel(QStringLiteral("Sin cuenta"), accountBox);
     m_accountName->setStyleSheet(QStringLiteral("font-size: 15px; font-weight: 700;"));
     m_accountMeta = new QLabel(QStringLiteral("--"), accountBox);
     m_accountMeta->setObjectName(QStringLiteral("SubtitleLabel"));
+    infoCol->addWidget(m_accountName);
+    infoCol->addWidget(m_accountMeta);
+
+    m_rankLabel = new QLabel(QStringLiteral("MMR --"), accountBox);
+    m_rankLabel->setObjectName(QStringLiteral("SubtitleLabel"));
     m_level = new QLabel(QStringLiteral("Nivel --"), accountBox);
     m_level->setObjectName(QStringLiteral("SubtitleLabel"));
-    accountRow->addWidget(m_accountCombo);
+
+    accountRow->addWidget(m_avatar);
     accountRow->addSpacing(16);
-    accountRow->addWidget(m_accountName);
-    accountRow->addSpacing(16);
-    accountRow->addWidget(m_accountMeta);
+    accountRow->addLayout(infoCol);
     accountRow->addStretch();
+    accountRow->addWidget(m_rankLabel);
+    accountRow->addSpacing(16);
     accountRow->addWidget(m_level);
     accountLayout->addLayout(accountRow);
     layout->addWidget(accountBox);
@@ -143,14 +190,6 @@ void MainWindow::buildUi()
     m_statusBar->showMessage(QStringLiteral("Listo"));
 
     // ---- connections ----
-    connect(m_accountCombo, &QComboBox::currentIndexChanged, this, [this](int index) {
-        if (index < 0 || index >= m_store.config().profiles.size())
-            return;
-        m_store.config().currentUsername = m_store.config().profiles.at(index).username;
-        m_store.save();
-        applyCurrentProfile();
-        validateCurrentSession();
-    });
     connect(addButton, &QPushButton::clicked, this, &MainWindow::addAccount);
     connect(logoutButton, &QPushButton::clicked, this, &MainWindow::logout);
     connect(browseButton, &QPushButton::clicked, this, [this]() {
@@ -204,25 +243,40 @@ void MainWindow::buildUi()
                                            .arg(accountId)
                                            .arg(steamId));
                 m_level->setText(QStringLiteral("Nivel %1").arg(playerLevel));
+
+                QString token;
+                for (const auto &profile : m_store.config().profiles)
+                {
+                    if (profile.username == m_store.config().currentUsername)
+                    {
+                        token = profile.token;
+                        break;
+                    }
+                }
+                m_server.fetchAvatar(steamId, token);
+                m_server.fetchRank(token);
             });
-}
 
-void MainWindow::rebuildProfiles()
-{
-    const QString current = m_store.config().currentUsername;
-    m_accountCombo->clear();
-    for (const auto &profile : m_store.config().profiles)
-        m_accountCombo->addItem(profile.username);
+    connect(&m_server, &ServerClient::rankFinished, this,
+            [this](bool ok, int mmr, int rankTier, int rankStar) {
+                m_rankLabel->setText(ok
+                    ? QStringLiteral("MMR %1  •  %2 %3")
+                          .arg(mmr)
+                          .arg(medalName(rankTier))
+                          .arg(rankStar)
+                    : QStringLiteral("MMR --"));
+            });
 
-    const int index = std::max(0, [&]() {
-        for (int i = 0; i < m_store.config().profiles.size(); ++i)
-        {
-            if (m_store.config().profiles.at(i).username == current)
-                return i;
-        }
-        return 0;
-    }());
-    m_accountCombo->setCurrentIndex(index);
+    connect(&m_server, &ServerClient::avatarFinished, this,
+            [this](bool ok, const QByteArray &png) {
+                if (!ok)
+                    return;
+                const auto pixmap = circularAvatar(png, 64);
+                if (pixmap.isNull())
+                    return;
+                m_avatar->setPixmap(pixmap);
+                m_avatar->setText(QString());
+            });
 }
 
 void MainWindow::applyCurrentProfile()
@@ -236,12 +290,19 @@ void MainWindow::applyCurrentProfile()
     {
         m_accountName->setText(QStringLiteral("Sin cuenta"));
         m_accountMeta->setText(QStringLiteral("Agrega una cuenta para jugar"));
+        m_avatar->setPixmap(QPixmap());
+        m_avatar->setText(QStringLiteral("?"));
+        m_rankLabel->setText(QStringLiteral("MMR --"));
         return;
     }
-    m_accountName->setText(it->displayName.isEmpty() ? it->username : it->displayName);
+    const QString name = it->displayName.isEmpty() ? it->username : it->displayName;
+    m_accountName->setText(name);
     m_accountMeta->setText(QStringLiteral("ID %1  •  Steam %2")
                                .arg(it->accountId)
                                .arg(it->steamId));
+    m_avatar->setPixmap(QPixmap());
+    m_avatar->setText(name.left(1).toUpper());
+    m_rankLabel->setText(QStringLiteral("MMR --"));
 }
 
 void MainWindow::validateCurrentSession()
@@ -292,7 +353,6 @@ bool MainWindow::applyAccount(LoginDialog &dialog)
     m_store.config().rememberMe = dialog.rememberMe();
     m_store.save();
 
-    rebuildProfiles();
     applyCurrentProfile();
     validateCurrentSession();
     m_statusBar->showMessage(QStringLiteral("Sesión iniciada como %1").arg(it->username));
