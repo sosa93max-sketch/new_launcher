@@ -183,8 +183,9 @@ LPVOID allocateWithinImageRva(HANDLE process, quintptr imageBase, int byteCount,
     return nullptr;
 }
 
-bool rebindStaticImport(HANDLE process, const QString &exePath, const QString &payloadPath,
-                        const QString &importModuleName, QString &error)
+bool rebindStaticImportInProcess(HANDLE process, const QString &exePath,
+                                 const QString &payloadPath,
+                                 const QString &importModuleName, QString &error)
 {
     const auto nameFieldRvas = PeUtils::findImportNameFieldRvas(exePath, importModuleName);
     if (nameFieldRvas.isEmpty())
@@ -344,7 +345,8 @@ LaunchResult launchAndInject(const QString &exePath,
 
     QString error;
     bool injected = rebindStaticImport
-        ? rebindStaticImport(processInfo.hProcess, exePath, dllPath, importModuleName, error)
+        ? rebindStaticImportInProcess(processInfo.hProcess, exePath, dllPath,
+                                      importModuleName, error)
         : injectInto(processInfo.hProcess, dllPath, error);
 
     if (injected)
