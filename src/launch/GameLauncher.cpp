@@ -92,8 +92,20 @@ LaunchOutcome GameLauncher::launch(const QString &dota2ExePath,
     if (shadowPayload.isEmpty())
         return {false, 0, nullptr, QStringLiteral("No se pudo preparar el payload")};
 
-    const bool hasStaticImport = PeUtils::importsModule(
-        dota2ExePath, QStringLiteral("steam_api64.dll"));
+    // The exe may import the emulator as steam_api64.dll or steam_api.dll;
+    // whichever it is, the rebinder has to find that descriptor and point it at
+    // the injected payload.
+    QString importName;
+    for (const auto &candidate :
+         {QStringLiteral("steam_api64.dll"), QStringLiteral("steam_api.dll")})
+    {
+        if (PeUtils::importsModule(dota2ExePath, candidate))
+        {
+            importName = candidate;
+            break;
+        }
+    }
+    const bool hasStaticImport = !importName.isEmpty();
 
     QString arguments;
     if (config.enableConsole)
@@ -106,7 +118,8 @@ LaunchOutcome GameLauncher::launch(const QString &dota2ExePath,
     const auto result = DllInjector::launchAndInject(
         dota2ExePath, shadowPayload, arguments.trimmed(),
         QFileInfo(dota2ExePath).absolutePath(),
-        hasStaticImport, QStringLiteral("steam_api64.dll"));
+        hasStaticImport,
+        hasStaticImport ? importName : QStringLiteral("steam_api64.dll"));
 
     if (result.success)
         Log::line(QStringLiteral("PLAY pid=%1 account=%2 (%3)")

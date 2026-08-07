@@ -133,3 +133,15 @@ void ServerClient::me(const QString &token)
         emit meFinished(true, QString(), personaName, accountId, steamId, playerLevel);
     });
 }
+
+void ServerClient::logout(const QString &token)
+{
+    QNetworkRequest request(QUrl(m_baseUrl + QStringLiteral("api/presence/offline")));
+    request.setHeader(QNetworkRequest::ContentTypeHeader,
+                      QStringLiteral("application/json"));
+    if (!token.isEmpty())
+        request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+    auto *reply = m_nam.post(request, QByteArrayLiteral("{}"));
+    connect(reply, &QNetworkReply::finished, reply, &QNetworkReply::deleteLater);
+    Log::line(QStringLiteral("LOGOUT POST api/presence/offline"));
+}

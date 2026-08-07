@@ -7,6 +7,7 @@
 
 #include <QCheckBox>
 #include <QComboBox>
+#include <QApplication>
 #include <QDateTime>
 #include <QFileDialog>
 #include <QGroupBox>
@@ -262,7 +263,11 @@ bool MainWindow::addAccount()
     LoginDialog dialog(m_store.config(), m_server);
     if (dialog.exec() != QDialog::Accepted)
         return false;
+    return applyAccount(dialog);
+}
 
+bool MainWindow::applyAccount(LoginDialog &dialog)
+{
     auto &profiles = m_store.config().profiles;
     auto it = std::find_if(profiles.begin(), profiles.end(),
                            [&dialog](const Profile &profile) {
@@ -295,6 +300,7 @@ bool MainWindow::addAccount()
 
 void MainWindow::logout()
 {
+    QString previousToken;
     auto &profiles = m_store.config().profiles;
     const auto it = std::find_if(profiles.begin(), profiles.end(),
                                  [this](const Profile &profile) {
@@ -302,13 +308,23 @@ void MainWindow::logout()
                                  });
     if (it != profiles.end())
     {
+        previousToken = it->token;
         it->token.clear();
         it->tokenSavedAtMs = 0;
-        m_store.save();
     }
-    m_accountName->setText(QStringLiteral("Sesión cerrada"));
-    m_accountMeta->setText(QStringLiteral("Vuelve a iniciar sesión para jugar"));
-    m_statusBar->showMessage(QStringLiteral("Sesión cerrada"));
+    if (!previousToken.isEmpty())
+        m_server.logout(previousToken);
+    m_store.save();
+
+    // The dashboard is only usable while logged in: closing the session
+    // requires logging back in, and cancelling closes the launcher.
+    LoginDialog dialog(m_store.config(), m_server);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        applyAccount(dialog);
+        return;
+    }
+    qApp->quit();
 }
 
 void MainWindow::refreshStatus()

@@ -26,6 +26,8 @@ public:
     bool addAccount();
 
 private:
+    /// Applies an accepted login dialog to the profile store.
+    bool applyAccount(class LoginDialog &dialog);
     void buildUi();
     void rebuildProfiles();
     void applyCurrentProfile();

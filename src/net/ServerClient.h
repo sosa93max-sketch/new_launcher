@@ -31,6 +31,10 @@ public:
     /// GET /api/users/me with the bearer token, to validate a saved session.
     void me(const QString &token);
 
+    /// POST /api/presence/offline: tells the server the account went offline.
+    /// Fire-and-forget; the caller clears the local token right after.
+    void logout(const QString &token);
+
 signals:
     void pingFinished(bool reachable, const QString &version);
     void loginFinished(bool ok, const QString &error, const QString &token,
