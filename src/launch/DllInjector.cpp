@@ -7,6 +7,8 @@
 #include <QDir>
 #include <QFileInfo>
 
+#include <cstring>
+
 #ifdef Q_OS_WIN
 #include <windows.h>
 #endif
@@ -245,8 +247,13 @@ bool injectInto(HANDLE process, const QString &dllPath, QString &error)
         return false;
     }
 
+    // LoadLibraryW expects a UTF-16 path; writing UTF-8 bytes made it read a
+    // garbage wide string and return NULL.
     const auto nativePath = QDir::toNativeSeparators(QFileInfo(dllPath).absoluteFilePath());
-    const QByteArray pathBytes = nativePath.toUtf8() + '\0';
+    const std::wstring widePath = nativePath.toStdWString();
+    const int pathByteCount = static_cast<int>((widePath.size() + 1) * sizeof(wchar_t));
+    QByteArray pathBytes(pathByteCount, '\0');
+    std::memcpy(pathBytes.data(), widePath.data(), widePath.size() * sizeof(wchar_t));
     LPVOID remoteMemory = VirtualAllocEx(process, nullptr, pathBytes.size(),
                                          MemCommitReserve, PageReadWrite);
     if (remoteMemory == nullptr)
