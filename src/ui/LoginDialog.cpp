@@ -52,7 +52,7 @@ LoginDialog::LoginDialog(AppConfig &config, ServerClient &server, QWidget *paren
     auto *form = new QFormLayout;
     form->setSpacing(10);
     form->addRow(QStringLiteral("Servidor"), m_serverUrl);
-    form->addRow(QStringLiteral("Usuario"), m_username);
+    form->addRow(QStringLiteral("Usuario"), m_usernameEdit);
     form->addRow(QStringLiteral("Contraseña"), m_password);
     form->addRow(QString(), m_remember);
 
