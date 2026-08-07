@@ -124,6 +124,7 @@ LoginDialog::LoginDialog(AppConfig &config, ServerClient &server, QWidget *paren
     outerLayout->setContentsMargins(0, 0, 0, 0);
     outerLayout->addWidget(root);
 
+    setMinimumWidth(520);
     adjustSize();
     setFixedSize(size());
     if (const auto screen = QGuiApplication::primaryScreen())
@@ -153,14 +154,16 @@ void LoginDialog::buildUi()
     auto *minimizeButton = new QPushButton(m_header);
     minimizeButton->setObjectName(QStringLiteral("IconButton"));
     minimizeButton->setIcon(QIcon(QStringLiteral(":/icons/minus.svg")));
-    minimizeButton->setIconSize(QSize(16, 16));
+    minimizeButton->setFixedSize(26, 26);
+    minimizeButton->setIconSize(QSize(13, 13));
     minimizeButton->setToolTip(QStringLiteral("Minimizar"));
     minimizeButton->setCursor(Qt::PointingHandCursor);
 
     auto *closeButton = new QPushButton(m_header);
     closeButton->setObjectName(QStringLiteral("CloseButton"));
     closeButton->setIcon(QIcon(QStringLiteral(":/icons/close.svg")));
-    closeButton->setIconSize(QSize(16, 16));
+    closeButton->setFixedSize(26, 26);
+    closeButton->setIconSize(QSize(13, 13));
     closeButton->setToolTip(QStringLiteral("Cerrar"));
     closeButton->setCursor(Qt::PointingHandCursor);
 

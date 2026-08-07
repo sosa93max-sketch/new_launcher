@@ -223,8 +223,8 @@ QLabel#LoginTitle {
 QPushButton#IconButton {
     background: transparent;
     border: none;
-    border-radius: 8px;
-    padding: 6px;
+    border-radius: 13px;
+    padding: 0;
 }
 
 QPushButton#IconButton:hover {
@@ -233,6 +233,13 @@ QPushButton#IconButton:hover {
 
 QPushButton#IconButton:pressed {
     background: #161b22;
+}
+
+QPushButton#CloseButton {
+    background: transparent;
+    border: none;
+    border-radius: 13px;
+    padding: 0;
 }
 
 QPushButton#CloseButton:hover {
