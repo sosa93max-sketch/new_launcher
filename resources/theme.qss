@@ -53,6 +53,10 @@ QLineEdit:focus, QComboBox:focus, QSpinBox:focus {
     border: 1px solid #58a6ff;
 }
 
+QLineEdit:hover, QComboBox:hover, QSpinBox:hover {
+    border: 1px solid #444c56;
+}
+
 QLineEdit[echoMode="2"] {
     /* password fields keep the same look */
 }
@@ -101,6 +105,10 @@ QPushButton#GhostButton {
     color: #c9d1d9;
 }
 
+QPushButton#GhostButton:hover {
+    background-color: #21262d;
+}
+
 QGroupBox {
     border: 1px solid #30363d;
     border-radius: 8px;
@@ -121,16 +129,21 @@ QCheckBox {
 }
 
 QCheckBox::indicator {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border: 1px solid #30363d;
-    border-radius: 4px;
+    border-radius: 5px;
     background-color: #161b22;
+}
+
+QCheckBox::indicator:hover {
+    border: 1px solid #58a6ff;
 }
 
 QCheckBox::indicator:checked {
     background-color: #1f6feb;
     border-color: #1f6feb;
+    image: url(:/icons/check.svg);
 }
 
 QStatusBar {
@@ -186,6 +199,14 @@ QWidget#LoginHeader {
     background: transparent;
 }
 
+QWidget#LoginBody {
+    background: transparent;
+}
+
+QLabel {
+    background: transparent;
+}
+
 QLabel#LoginBrand {
     color: #ffffff;
     font-size: 15px;
@@ -212,6 +233,14 @@ QPushButton#IconButton:hover {
 
 QPushButton#IconButton:pressed {
     background: #161b22;
+}
+
+QPushButton#CloseButton:hover {
+    background: #da3633;
+}
+
+QPushButton#CloseButton:pressed {
+    background: #b62324;
 }
 
 QProgressBar#BusyBar {

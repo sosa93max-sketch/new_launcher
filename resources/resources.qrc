@@ -9,5 +9,6 @@
         <file>icons/close.svg</file>
         <file>icons/eye.svg</file>
         <file>icons/eye-off.svg</file>
+        <file>icons/check.svg</file>
     </qresource>
 </RCC>

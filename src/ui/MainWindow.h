@@ -21,19 +21,19 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(ConfigStore &store, ServerClient &server, QWidget *parent = nullptr);
 
+    /// Shows the login dialog. Returns true only when an account was added or
+    /// updated; false means the user cancelled.
+    bool addAccount();
+
 private:
     void buildUi();
     void rebuildProfiles();
     void applyCurrentProfile();
     void validateCurrentSession();
-    /// Shows the login dialog. Returns true only when an account was added or
-    /// updated; false means the user cancelled.
-    bool addAccount();
     void logout();
     void play();
     void stop();
     void refreshStatus();
-    void refreshAccountInfo();
     void monitorProcess();
 
     ConfigStore &m_store;

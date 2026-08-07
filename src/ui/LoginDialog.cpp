@@ -6,7 +6,6 @@
 #include <QApplication>
 #include <QCheckBox>
 #include <QEvent>
-#include <QGraphicsDropShadowEffect>
 #include <QHBoxLayout>
 #include <QIcon>
 #include <QLabel>
@@ -23,19 +22,14 @@ LoginDialog::LoginDialog(AppConfig &config, ServerClient &server, QWidget *paren
     , m_config(config)
     , m_server(server)
 {
-    setWindowFlags(Qt::FramelessWindowHint | Qt::Dialog);
+    // Qt::Window (not Dialog) so the frameless window gets a taskbar entry and
+    // showMinimized() really minimizes to the taskbar.
+    setWindowFlags(Qt::FramelessWindowHint | Qt::Window);
     setAttribute(Qt::WA_TranslucentBackground);
     setModal(true);
-    setFixedSize(508, 648);
-
-    auto *shadow = new QGraphicsDropShadowEffect(this);
-    shadow->setBlurRadius(36);
-    shadow->setColor(QColor(0, 0, 0, 170));
-    shadow->setOffset(0, 10);
 
     auto *root = new QWidget(this);
     root->setObjectName(QStringLiteral("LoginRoot"));
-    root->setGraphicsEffect(shadow);
 
     auto *layout = new QVBoxLayout(root);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -61,15 +55,18 @@ LoginDialog::LoginDialog(AppConfig &config, ServerClient &server, QWidget *paren
     m_serverUrl = new QLineEdit(m_config.serverUrl, body);
     m_serverUrl->setPlaceholderText(QStringLiteral("http://127.0.0.1:5199/"));
     m_serverUrl->addAction(QIcon(QStringLiteral(":/icons/server.svg")), QLineEdit::LeadingPosition);
+    m_serverUrl->setMinimumHeight(38);
 
     m_usernameEdit = new QLineEdit(body);
     m_usernameEdit->setPlaceholderText(QStringLiteral("Usuario"));
     m_usernameEdit->addAction(QIcon(QStringLiteral(":/icons/user.svg")), QLineEdit::LeadingPosition);
+    m_usernameEdit->setMinimumHeight(38);
 
     m_password = new QLineEdit(body);
     m_password->setPlaceholderText(QStringLiteral("Contraseña"));
     m_password->setEchoMode(QLineEdit::Password);
     m_password->addAction(QIcon(QStringLiteral(":/icons/lock.svg")), QLineEdit::LeadingPosition);
+    m_password->setMinimumHeight(38);
     auto *eyeAction = m_password->addAction(QIcon(QStringLiteral(":/icons/eye.svg")),
                                             QLineEdit::TrailingPosition);
     eyeAction->setCheckable(true);
@@ -97,7 +94,7 @@ LoginDialog::LoginDialog(AppConfig &config, ServerClient &server, QWidget *paren
 
     m_loginButton = new QPushButton(QStringLiteral("INICIAR SESIÓN"), body);
     m_loginButton->setObjectName(QStringLiteral("AccentButton"));
-    m_loginButton->setMinimumHeight(42);
+    m_loginButton->setMinimumHeight(44);
     m_loginButton->setCursor(Qt::PointingHandCursor);
     m_loginButton->setDefault(true);
 
@@ -119,15 +116,16 @@ LoginDialog::LoginDialog(AppConfig &config, ServerClient &server, QWidget *paren
     bodyLayout->addSpacing(10);
     bodyLayout->addWidget(m_loginButton);
     bodyLayout->addWidget(m_cancelButton);
-    bodyLayout->addStretch();
 
     layout->addWidget(body);
 
-    // The shadowed card fills the translucent window.
+    // The card fills the translucent window, sized to its content.
     auto *outerLayout = new QVBoxLayout(this);
-    outerLayout->setContentsMargins(24, 24, 24, 24);
+    outerLayout->setContentsMargins(0, 0, 0, 0);
     outerLayout->addWidget(root);
 
+    adjustSize();
+    setFixedSize(size());
     if (const auto screen = QGuiApplication::primaryScreen())
         move(screen->availableGeometry().center() - rect().center());
 
@@ -160,7 +158,7 @@ void LoginDialog::buildUi()
     minimizeButton->setCursor(Qt::PointingHandCursor);
 
     auto *closeButton = new QPushButton(m_header);
-    closeButton->setObjectName(QStringLiteral("IconButton"));
+    closeButton->setObjectName(QStringLiteral("CloseButton"));
     closeButton->setIcon(QIcon(QStringLiteral(":/icons/close.svg")));
     closeButton->setIconSize(QSize(16, 16));
     closeButton->setToolTip(QStringLiteral("Cerrar"));
