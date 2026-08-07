@@ -317,11 +317,14 @@ void MainWindow::logout()
     m_store.save();
 
     // The dashboard is only usable while logged in: closing the session
-    // requires logging back in, and cancelling closes the launcher.
+    // requires logging back in, and cancelling closes the launcher. Hide it
+    // while the login dialog is up so it does not stay visible behind it.
+    hide();
     LoginDialog dialog(m_store.config(), m_server);
     if (dialog.exec() == QDialog::Accepted)
     {
         applyAccount(dialog);
+        show();
         return;
     }
     qApp->quit();
