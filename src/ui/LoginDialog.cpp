@@ -28,8 +28,8 @@ LoginDialog::LoginDialog(AppConfig &config, ServerClient &server, QWidget *paren
 
     m_serverUrl = new QLineEdit(m_config.serverUrl, this);
     m_serverUrl->setPlaceholderText(QStringLiteral("http://127.0.0.1:5199/"));
-    m_username = new QLineEdit(this);
-    m_username->setPlaceholderText(QStringLiteral("Usuario"));
+    m_usernameEdit = new QLineEdit(this);
+    m_usernameEdit->setPlaceholderText(QStringLiteral("Usuario"));
     m_password = new QLineEdit(this);
     m_password->setPlaceholderText(QStringLiteral("Contraseña"));
     m_password->setEchoMode(QLineEdit::Password);
@@ -98,7 +98,7 @@ LoginDialog::LoginDialog(AppConfig &config, ServerClient &server, QWidget *paren
                     Log::line(QStringLiteral("LOGIN dialog error: %1").arg(error));
                     return;
                 }
-                m_username = m_username->text().trimmed();
+                m_username = m_usernameEdit->text().trimmed();
                 m_displayName = m_username;
                 m_token = token;
                 m_steamId = steamId;
@@ -129,7 +129,7 @@ void LoginDialog::startStatusProbe()
 void LoginDialog::attemptLogin()
 {
     const QString url = m_serverUrl->text().trimmed();
-    const QString user = m_username->text().trimmed();
+    const QString user = m_usernameEdit->text().trimmed();
     const QString pass = m_password->text();
 
     if (url.isEmpty())
