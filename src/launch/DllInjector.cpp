@@ -49,7 +49,7 @@ QString winError(DWORD code)
     }
     if (message.isEmpty())
         message = QStringLiteral("error 0x%1").arg(code, 8, 16, QLatin1Char('0'));
-    return message;
+    return QStringLiteral("error %1 (%2)").arg(code).arg(message);
 }
 
 bool readImageBase(HANDLE process, PeUtils::Arch arch, quintptr &imageBase, QString &error)
