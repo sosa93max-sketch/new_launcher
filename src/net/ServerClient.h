@@ -32,8 +32,9 @@ public:
     void me(const QString &token);
 
     /// POST /api/presence/offline: tells the server the account went offline.
-    /// Fire-and-forget; the caller clears the local token right after.
-    void logout(const QString &token);
+    /// Fire-and-forget unless waitForDelivery is set (used on app close, so the
+    /// server sees the account go offline before the process exits).
+    void logout(const QString &token, bool waitForDelivery = false);
 
 signals:
     void pingFinished(bool reachable, const QString &version);

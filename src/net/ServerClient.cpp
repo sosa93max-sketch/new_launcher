@@ -4,8 +4,11 @@
 
 #include <QJsonDocument>
 #include <QJsonParseError>
+#include <QEventLoop>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QRegularExpression>
+#include <QTimer>
 #include <QUrl>
 
 #include <utility>
@@ -18,6 +21,20 @@ static const QLatin1String KeyAccountId("AccountId");
 static const QLatin1String KeyPersonaName("PersonaName");
 static const QLatin1String KeyPlayerLevel("PlayerLevel");
 static const QLatin1String KeyVersion("Version");
+
+namespace
+{
+/// JSON numbers above 2^53 lose precision when Qt parses them as double, and a
+/// Steam id (~7.6e16) is far above that. Read the exact digits from the raw
+/// payload instead, so every account keeps its own id.
+quint64 readBigInt(const QByteArray &raw, const QByteArray &key)
+{
+    const QRegularExpression pattern(
+        QStringLiteral("\"%1\"\\s*:\\s*(\\d{1,20})").arg(QString::fromLatin1(key)));
+    const auto match = pattern.match(QString::fromUtf8(raw));
+    return match.hasMatch() ? match.captured(1).toULongLong() : 0;
+}
+}
 
 ServerClient::ServerClient(QObject *parent)
     : QObject(parent)
@@ -95,9 +112,10 @@ void ServerClient::login(const QString &username, const QString &password)
             return;
         }
 
-        const auto object = QJsonDocument::fromJson(reply->readAll()).object();
+        const QByteArray raw = reply->readAll();
+        const auto object = QJsonDocument::fromJson(raw).object();
         const auto token = object.value(KeyToken).toString();
-        const auto steamId = object.value(KeySteamId).toVariant().toULongLong();
+        const auto steamId = readBigInt(raw, KeySteamId.toLatin1());
         const auto accountId = static_cast<quint32>(object.value(KeyAccountId).toDouble(0));
         reply->deleteLater();
 
@@ -124,17 +142,18 @@ void ServerClient::me(const QString &token)
             return;
         }
 
-        const auto object = QJsonDocument::fromJson(reply->readAll()).object();
+        const QByteArray raw = reply->readAll();
+        const auto object = QJsonDocument::fromJson(raw).object();
         const auto personaName = object.value(KeyPersonaName).toString();
         const auto accountId = static_cast<quint32>(object.value(KeyAccountId).toDouble(0));
-        const auto steamId = object.value(KeySteamId).toVariant().toULongLong();
+        const auto steamId = readBigInt(raw, KeySteamId.toLatin1());
         const auto playerLevel = object.value(KeyPlayerLevel).toInt(0);
         reply->deleteLater();
         emit meFinished(true, QString(), personaName, accountId, steamId, playerLevel);
     });
 }
 
-void ServerClient::logout(const QString &token)
+void ServerClient::logout(const QString &token, bool waitForDelivery)
 {
     QNetworkRequest request(QUrl(m_baseUrl + QStringLiteral("api/presence/offline")));
     request.setHeader(QNetworkRequest::ContentTypeHeader,
@@ -142,6 +161,20 @@ void ServerClient::logout(const QString &token)
     if (!token.isEmpty())
         request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
     auto *reply = m_nam.post(request, QByteArrayLiteral("{}"));
-    connect(reply, &QNetworkReply::finished, reply, &QNetworkReply::deleteLater);
+    if (!waitForDelivery)
+    {
+        connect(reply, &QNetworkReply::finished, reply, &QNetworkReply::deleteLater);
+        Log::line(QStringLiteral("LOGOUT POST api/presence/offline"));
+        return;
+    }
+
+    QEventLoop loop;
+    QTimer timer;
+    timer.setSingleShot(true);
+    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+    timer.start(1500);
+    loop.exec();
+    reply->deleteLater();
     Log::line(QStringLiteral("LOGOUT POST api/presence/offline"));
 }

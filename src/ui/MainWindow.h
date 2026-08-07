@@ -25,6 +25,10 @@ public:
     /// updated; false means the user cancelled.
     bool addAccount();
 
+protected:
+    /// Tells the server the account went offline before the app exits.
+    void closeEvent(QCloseEvent *event) override;
+
 private:
     /// Applies an accepted login dialog to the profile store.
     bool applyAccount(class LoginDialog &dialog);

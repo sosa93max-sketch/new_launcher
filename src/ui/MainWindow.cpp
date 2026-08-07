@@ -8,6 +8,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QApplication>
+#include <QCloseEvent>
 #include <QDateTime>
 #include <QFileDialog>
 #include <QGroupBox>
@@ -296,6 +297,18 @@ bool MainWindow::applyAccount(LoginDialog &dialog)
     validateCurrentSession();
     m_statusBar->showMessage(QStringLiteral("Sesión iniciada como %1").arg(it->username));
     return true;
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    const auto &profiles = m_store.config().profiles;
+    const auto it = std::find_if(profiles.cbegin(), profiles.cend(),
+                                 [this](const Profile &profile) {
+                                     return profile.username == m_store.config().currentUsername;
+                                 });
+    if (it != profiles.cend() && !it->token.isEmpty())
+        m_server.logout(it->token, /*waitForDelivery=*/true);
+    event->accept();
 }
 
 void MainWindow::logout()
