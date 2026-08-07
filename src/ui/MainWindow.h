@@ -26,7 +26,9 @@ private:
     void rebuildProfiles();
     void applyCurrentProfile();
     void validateCurrentSession();
-    void addAccount();
+    /// Shows the login dialog. Returns true only when an account was added or
+    /// updated; false means the user cancelled.
+    bool addAccount();
     void logout();
     void play();
     void stop();

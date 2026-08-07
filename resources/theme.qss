@@ -173,3 +173,55 @@ QScrollBar::handle:vertical {
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     height: 0;
 }
+
+/* ---------- Login window ---------- */
+QWidget#LoginRoot {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                stop:0 #10151c, stop:0.5 #0d1117, stop:1 #0b0f14);
+    border: 1px solid #21262d;
+    border-radius: 16px;
+}
+
+QWidget#LoginHeader {
+    background: transparent;
+}
+
+QLabel#LoginBrand {
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+QLabel#LoginTitle {
+    color: #ffffff;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+QPushButton#IconButton {
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 6px;
+}
+
+QPushButton#IconButton:hover {
+    background: #21262d;
+}
+
+QPushButton#IconButton:pressed {
+    background: #161b22;
+}
+
+QProgressBar#BusyBar {
+    background: transparent;
+    border: none;
+    max-height: 3px;
+    margin-top: 2px;
+}
+
+QProgressBar#BusyBar::chunk {
+    background-color: #1f6feb;
+    border-radius: 2px;
+}

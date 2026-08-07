@@ -41,10 +41,7 @@ MainWindow::MainWindow(ConfigStore &store, ServerClient &server, QWidget *parent
     connect(&m_processTimer, &QTimer::timeout, this, &MainWindow::monitorProcess);
     m_processTimer.start();
 
-    if (m_store.config().profiles.isEmpty())
-        addAccount();
-    else
-        validateCurrentSession();
+    validateCurrentSession();
 }
 
 void MainWindow::buildUi()
@@ -257,11 +254,11 @@ void MainWindow::validateCurrentSession()
     m_server.me(it->token);
 }
 
-void MainWindow::addAccount()
+bool MainWindow::addAccount()
 {
     LoginDialog dialog(m_store.config(), m_server, this);
     if (dialog.exec() != QDialog::Accepted)
-        return;
+        return false;
 
     auto &profiles = m_store.config().profiles;
     auto it = std::find_if(profiles.begin(), profiles.end(),
@@ -288,7 +285,9 @@ void MainWindow::addAccount()
 
     rebuildProfiles();
     applyCurrentProfile();
+    validateCurrentSession();
     m_statusBar->showMessage(QStringLiteral("Sesión iniciada como %1").arg(it->username));
+    return true;
 }
 
 void MainWindow::logout()

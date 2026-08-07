@@ -1,5 +1,13 @@
 <RCC>
     <qresource prefix="/">
         <file>theme.qss</file>
+        <file>icons/logo.svg</file>
+        <file>icons/user.svg</file>
+        <file>icons/lock.svg</file>
+        <file>icons/server.svg</file>
+        <file>icons/minus.svg</file>
+        <file>icons/close.svg</file>
+        <file>icons/eye.svg</file>
+        <file>icons/eye-off.svg</file>
     </qresource>
 </RCC>
