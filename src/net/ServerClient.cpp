@@ -115,7 +115,7 @@ void ServerClient::login(const QString &username, const QString &password)
         const QByteArray raw = reply->readAll();
         const auto object = QJsonDocument::fromJson(raw).object();
         const auto token = object.value(KeyToken).toString();
-        const auto steamId = readBigInt(raw, KeySteamId.toLatin1());
+        const auto steamId = readBigInt(raw, QByteArrayLiteral("SteamId"));
         const auto accountId = static_cast<quint32>(object.value(KeyAccountId).toDouble(0));
         reply->deleteLater();
 
@@ -146,7 +146,7 @@ void ServerClient::me(const QString &token)
         const auto object = QJsonDocument::fromJson(raw).object();
         const auto personaName = object.value(KeyPersonaName).toString();
         const auto accountId = static_cast<quint32>(object.value(KeyAccountId).toDouble(0));
-        const auto steamId = readBigInt(raw, KeySteamId.toLatin1());
+        const auto steamId = readBigInt(raw, QByteArrayLiteral("SteamId"));
         const auto playerLevel = object.value(KeyPlayerLevel).toInt(0);
         reply->deleteLater();
         emit meFinished(true, QString(), personaName, accountId, steamId, playerLevel);
