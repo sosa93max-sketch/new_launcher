@@ -1,12 +1,10 @@
 # D2Max Launcher (Qt6 / C++)
 
-Launcher de escritorio para **Dota 2 7.22g** contra el backend privado
-**D2STServer**. Solo Dota 2, con **multi-cuenta**: cada cuenta es un usuario del
+Launcher de escritorio para **D2STServer**. Dota 2, con **multi-cuenta**: cada cuenta es un usuario del
 propio servidor D2 (el primer login crea el usuario en el server), se cambia de
 cuenta con un clic y el juego se lanza con la identidad de la cuenta activa.
 
-Inspirado en el launcher WPF de SKYNET y en el antiguo `D2Launcher`, pero
-reescrito en **Qt 6 / C++** (Widgets + Network).
+Inspirado en el launcher WPF de SKYNET escrito en **Qt 6 / C++** (Widgets + Network).
 
 ## Funcionalidades
 
