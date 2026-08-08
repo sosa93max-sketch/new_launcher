@@ -37,3 +37,23 @@ Source 2 rechaza la siguiente.
   comprobar `game\bin\win64\D2MAX\steam_api.ini`; el `FallbackAccountId` debe
   cambiar antes de cada lanzamiento. Confirmar también que no quede
   `dota2.exe` con esa ruta en Task Manager.
+
+## Tienda web
+
+El botón `TIENDA` usa el bearer token de la cuenta activa únicamente para
+solicitar `POST /api/store/handoff`. El servidor devuelve un código efímero de
+un solo uso; el launcher abre `/store?ticket=...` en el navegador predeterminado
+y el servidor convierte ese código en una cookie `HttpOnly` limitada a la API de
+la tienda. El token permanente nunca se coloca en la URL ni se entrega al
+navegador.
+
+La tienda consume el catálogo, saldo, inventario, historial y compra REST del
+servidor. La cuenta usada es siempre el perfil activo del launcher, por lo que
+no aparece un segundo formulario de login. Si el servidor se reinició, el token
+guardado puede haber expirado y el launcher debe volver a validar o iniciar la
+sesión antes de abrir la tienda.
+
+La prueba manual en Windows debe cubrir: iniciar sesión con A, pulsar `TIENDA`,
+comprar un producto activo, confirmar el artículo en el inventario de Dota,
+cerrar/reabrir el juego y repetir con la cuenta B para verificar que el código y
+la identidad no se mezclan.

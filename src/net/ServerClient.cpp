@@ -218,3 +218,39 @@ void ServerClient::logout(const QString &token, bool waitForDelivery)
     reply->deleteLater();
     Log::line(QStringLiteral("LOGOUT POST api/presence/offline"));
 }
+
+void ServerClient::createStoreHandoff(const QString &token)
+{
+    QNetworkRequest request(QUrl(m_baseUrl + QStringLiteral("api/store/handoff")));
+    request.setHeader(QNetworkRequest::ContentTypeHeader,
+                      QStringLiteral("application/json"));
+    if (!token.isEmpty())
+        request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+
+    auto *reply = m_nam.post(request, QByteArrayLiteral("{}"));
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        if (reply->error() != QNetworkReply::NoError)
+        {
+            const auto error = errorText(reply, QStringLiteral("No se pudo abrir la tienda"));
+            emit storeHandoffFinished(false, error, QString());
+            reply->deleteLater();
+            return;
+        }
+
+        const auto object = QJsonDocument::fromJson(reply->readAll()).object();
+        const auto path = object.value(QStringLiteral("Path")).toString();
+        reply->deleteLater();
+        if (path.isEmpty())
+        {
+            emit storeHandoffFinished(false, QStringLiteral("El servidor no devolvió el enlace de la tienda"), QString());
+            return;
+        }
+
+        emit storeHandoffFinished(true, QString(), path);
+    });
+}
+
+QUrl ServerClient::urlForPath(const QString &path) const
+{
+    return QUrl(m_baseUrl).resolved(QUrl(path));
+}

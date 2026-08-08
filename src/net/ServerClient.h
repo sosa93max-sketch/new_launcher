@@ -4,6 +4,7 @@
 #include <QNetworkAccessManager>
 #include <QObject>
 #include <QString>
+#include <QUrl>
 
 #include <cstdint>
 
@@ -42,6 +43,13 @@ public:
     /// server sees the account go offline before the process exits).
     void logout(const QString &token, bool waitForDelivery = false);
 
+    /// POST /api/store/handoff and return a short-lived same-origin store path.
+    /// The bearer token is never placed in the URL.
+    void createStoreHandoff(const QString &token);
+
+    /// Resolves a server-returned relative path against the configured base URL.
+    QUrl urlForPath(const QString &path) const;
+
 signals:
     void pingFinished(bool reachable, const QString &version);
     void loginFinished(bool ok, const QString &error, const QString &token,
@@ -50,6 +58,7 @@ signals:
                     quint32 accountId, quint64 steamId, int playerLevel);
     void rankFinished(bool ok, int mmr, int rankTier, int rankStar);
     void avatarFinished(bool ok, const QByteArray &png);
+    void storeHandoffFinished(bool ok, const QString &error, const QString &path);
 
 private:
     QNetworkReply *postJson(const QString &path, const QJsonObject &body);

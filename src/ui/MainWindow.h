@@ -36,6 +36,7 @@ private:
     void validateCurrentSession();
     void logout();
     void play();
+    void openStore();
     void stop();
     void refreshStatus();
     void monitorProcess();
@@ -56,6 +57,7 @@ private:
     QCheckBox *m_novid = nullptr;
     QCheckBox *m_insecure = nullptr;
     QPushButton *m_playButton = nullptr;
+    QPushButton *m_storeButton = nullptr;
     QStatusBar *m_statusBar = nullptr;
 
     QTimer m_statusTimer;

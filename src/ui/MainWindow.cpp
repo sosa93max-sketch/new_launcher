@@ -10,6 +10,7 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDateTime>
+#include <QDesktopServices>
 #include <QFileDialog>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -96,9 +97,12 @@ void MainWindow::buildUi()
     addButton->setObjectName(QStringLiteral("GhostButton"));
     auto *logoutButton = new QPushButton(QStringLiteral("CERRAR SESIÓN"), central);
     logoutButton->setObjectName(QStringLiteral("GhostButton"));
+    m_storeButton = new QPushButton(QStringLiteral("TIENDA"), central);
+    m_storeButton->setObjectName(QStringLiteral("AccentButton"));
     header->addWidget(title);
     header->addStretch();
     header->addWidget(m_statusLabel);
+    header->addWidget(m_storeButton);
     header->addWidget(addButton);
     header->addWidget(logoutButton);
     layout->addLayout(header);
@@ -191,6 +195,7 @@ void MainWindow::buildUi()
 
     // ---- connections ----
     connect(addButton, &QPushButton::clicked, this, &MainWindow::addAccount);
+    connect(m_storeButton, &QPushButton::clicked, this, &MainWindow::openStore);
     connect(logoutButton, &QPushButton::clicked, this, &MainWindow::logout);
     connect(browseButton, &QPushButton::clicked, this, [this]() {
         const QString path = QFileDialog::getOpenFileName(
@@ -276,6 +281,30 @@ void MainWindow::buildUi()
                     return;
                 m_avatar->setPixmap(pixmap);
                 m_avatar->setText(QString());
+            });
+
+    connect(&m_server, &ServerClient::storeHandoffFinished, this,
+            [this](bool ok, const QString &error, const QString &path) {
+                if (!ok)
+                {
+                    m_statusBar->showMessage(error);
+                    QMessageBox::warning(this, QStringLiteral("Tienda"), error);
+                    if (m_storeButton)
+                        m_storeButton->setEnabled(true);
+                    return;
+                }
+
+                const auto url = m_server.urlForPath(path);
+                if (!QDesktopServices::openUrl(url))
+                {
+                    QMessageBox::information(
+                        this,
+                        QStringLiteral("Tienda"),
+                        QStringLiteral("Copia este enlace en tu navegador:\n%1").arg(url.toString()));
+                }
+                m_statusBar->showMessage(QStringLiteral("Tienda abierta en el navegador"));
+                if (m_storeButton)
+                    m_storeButton->setEnabled(true);
             });
 }
 
@@ -464,6 +493,27 @@ void MainWindow::play()
     m_runningHandle = outcome.processHandle;
     m_playButton->setText(QStringLiteral("DETENER DOTA 2"));
     m_statusBar->showMessage(QStringLiteral("Dota 2 ejecutándose (PID %1)").arg(outcome.pid));
+}
+
+void MainWindow::openStore()
+{
+    const auto &profiles = m_store.config().profiles;
+    const auto it = std::find_if(profiles.cbegin(), profiles.cend(),
+                                 [this](const Profile &profile) {
+                                     return profile.username == m_store.config().currentUsername;
+                                 });
+    if (it == profiles.cend() || it->token.isEmpty())
+    {
+        QMessageBox::information(
+            this,
+            QStringLiteral("Tienda"),
+            QStringLiteral("Inicia sesión antes de abrir la tienda."));
+        return;
+    }
+
+    m_storeButton->setEnabled(false);
+    m_statusBar->showMessage(QStringLiteral("Preparando acceso seguro a la tienda…"));
+    m_server.createStoreHandoff(it->token);
 }
 
 void MainWindow::stop()
