@@ -22,8 +22,6 @@ LoginDialog::LoginDialog(AppConfig &config, ServerClient &server, QWidget *paren
     , m_config(config)
     , m_server(server)
 {
-    // Qt::Window (not Dialog) so the frameless window gets a taskbar entry and
-    // showMinimized() really minimizes to the taskbar.
     setWindowFlags(Qt::FramelessWindowHint | Qt::Window);
     setAttribute(Qt::WA_TranslucentBackground);
     setModal(true);
@@ -42,8 +40,8 @@ LoginDialog::LoginDialog(AppConfig &config, ServerClient &server, QWidget *paren
     auto *body = new QWidget(root);
     body->setObjectName(QStringLiteral("LoginBody"));
     auto *bodyLayout = new QVBoxLayout(body);
-    bodyLayout->setContentsMargins(38, 30, 38, 30);
-    bodyLayout->setSpacing(12);
+    bodyLayout->setContentsMargins(26, 22, 26, 22);
+    bodyLayout->setSpacing(10);
 
     auto *title = new QLabel(QStringLiteral("BIENVENIDO"), body);
     title->setObjectName(QStringLiteral("LoginTitle"));
@@ -56,18 +54,18 @@ LoginDialog::LoginDialog(AppConfig &config, ServerClient &server, QWidget *paren
     m_serverUrl = new QLineEdit(m_config.serverUrl, body);
     m_serverUrl->setPlaceholderText(QStringLiteral("http://127.0.0.1:5199/"));
     m_serverUrl->addAction(QIcon(QStringLiteral(":/icons/server.svg")), QLineEdit::LeadingPosition);
-    m_serverUrl->setMinimumHeight(38);
+    m_serverUrl->setMinimumHeight(34);
 
     m_usernameEdit = new QLineEdit(body);
     m_usernameEdit->setPlaceholderText(QStringLiteral("Usuario"));
     m_usernameEdit->addAction(QIcon(QStringLiteral(":/icons/user.svg")), QLineEdit::LeadingPosition);
-    m_usernameEdit->setMinimumHeight(38);
+    m_usernameEdit->setMinimumHeight(34);
 
     m_password = new QLineEdit(body);
     m_password->setPlaceholderText(QStringLiteral("Contraseña"));
     m_password->setEchoMode(QLineEdit::Password);
     m_password->addAction(QIcon(QStringLiteral(":/icons/lock.svg")), QLineEdit::LeadingPosition);
-    m_password->setMinimumHeight(38);
+    m_password->setMinimumHeight(34);
     auto *eyeAction = m_password->addAction(QIcon(QStringLiteral(":/icons/eye.svg")),
                                             QLineEdit::TrailingPosition);
     eyeAction->setCheckable(true);
@@ -80,7 +78,7 @@ LoginDialog::LoginDialog(AppConfig &config, ServerClient &server, QWidget *paren
     m_remember = new QCheckBox(QStringLiteral("Recordar cuenta"), body);
     m_remember->setChecked(m_config.rememberMe);
 
-    m_status = new QLabel(QStringLiteral("Comprobando servidor..."), body);
+    m_status = new QLabel(QStringLiteral("Comprobando servidor…"), body);
     m_status->setObjectName(QStringLiteral("SubtitleLabel"));
     m_error = new QLabel(body);
     m_error->setObjectName(QStringLiteral("ErrorLabel"));
@@ -95,17 +93,17 @@ LoginDialog::LoginDialog(AppConfig &config, ServerClient &server, QWidget *paren
 
     m_loginButton = new QPushButton(QStringLiteral("INICIAR SESIÓN"), body);
     m_loginButton->setObjectName(QStringLiteral("AccentButton"));
-    m_loginButton->setMinimumHeight(44);
+    m_loginButton->setMinimumHeight(40);
     m_loginButton->setCursor(Qt::PointingHandCursor);
     m_loginButton->setDefault(true);
 
     m_cancelButton = new QPushButton(QStringLiteral("CANCELAR"), body);
     m_cancelButton->setObjectName(QStringLiteral("GhostButton"));
-    m_cancelButton->setMinimumHeight(36);
+    m_cancelButton->setMinimumHeight(32);
 
     bodyLayout->addWidget(title);
     bodyLayout->addWidget(subtitle);
-    bodyLayout->addSpacing(10);
+    bodyLayout->addSpacing(8);
     bodyLayout->addWidget(m_serverUrl);
     bodyLayout->addWidget(m_usernameEdit);
     bodyLayout->addWidget(m_password);
@@ -114,18 +112,17 @@ LoginDialog::LoginDialog(AppConfig &config, ServerClient &server, QWidget *paren
     bodyLayout->addWidget(m_status);
     bodyLayout->addWidget(m_error);
     bodyLayout->addWidget(m_progress);
-    bodyLayout->addSpacing(10);
+    bodyLayout->addSpacing(8);
     bodyLayout->addWidget(m_loginButton);
     bodyLayout->addWidget(m_cancelButton);
 
     layout->addWidget(body);
 
-    // The card fills the translucent window, sized to its content.
     auto *outerLayout = new QVBoxLayout(this);
     outerLayout->setContentsMargins(0, 0, 0, 0);
     outerLayout->addWidget(root);
 
-    setMinimumWidth(520);
+    setMinimumWidth(420);
     adjustSize();
     setFixedSize(size());
     if (const auto screen = QGuiApplication::primaryScreen())
@@ -140,31 +137,31 @@ void LoginDialog::buildUi()
 {
     m_header = new QWidget(this);
     m_header->setObjectName(QStringLiteral("LoginHeader"));
-    m_header->setFixedHeight(56);
+    m_header->setFixedHeight(44);
     m_header->installEventFilter(this);
 
     auto *headerLayout = new QHBoxLayout(m_header);
-    headerLayout->setContentsMargins(20, 0, 12, 0);
+    headerLayout->setContentsMargins(16, 0, 10, 0);
     headerLayout->setSpacing(8);
 
     auto *logo = new QLabel(m_header);
-    logo->setPixmap(QIcon(QStringLiteral(":/appicon-256.png")).pixmap(30, 30));
+    logo->setPixmap(QIcon(QStringLiteral(":/appicon-256.png")).pixmap(24, 24));
     auto *brand = new QLabel(QStringLiteral("D2MAX"), m_header);
     brand->setObjectName(QStringLiteral("LoginBrand"));
 
     auto *minimizeButton = new QPushButton(m_header);
     minimizeButton->setObjectName(QStringLiteral("IconButton"));
     minimizeButton->setIcon(QIcon(QStringLiteral(":/icons/minus.svg")));
-    minimizeButton->setFixedSize(26, 26);
-    minimizeButton->setIconSize(QSize(13, 13));
+    minimizeButton->setFixedSize(22, 22);
+    minimizeButton->setIconSize(QSize(11, 11));
     minimizeButton->setToolTip(QStringLiteral("Minimizar"));
     minimizeButton->setCursor(Qt::PointingHandCursor);
 
     auto *closeButton = new QPushButton(m_header);
     closeButton->setObjectName(QStringLiteral("CloseButton"));
     closeButton->setIcon(QIcon(QStringLiteral(":/icons/close.svg")));
-    closeButton->setFixedSize(26, 26);
-    closeButton->setIconSize(QSize(13, 13));
+    closeButton->setFixedSize(22, 22);
+    closeButton->setIconSize(QSize(11, 11));
     closeButton->setToolTip(QStringLiteral("Cerrar"));
     closeButton->setCursor(Qt::PointingHandCursor);
 
@@ -187,8 +184,8 @@ void LoginDialog::connectSignals()
 
     connect(&m_server, &ServerClient::pingFinished,
             this, [this](bool reachable, const QString &version) {
-                m_status->setStyleSheet(reachable ? QStringLiteral("color: #3fb950; font-weight: 700;")
-                                                  : QStringLiteral("color: #f85149; font-weight: 700;"));
+                m_status->setStyleSheet(reachable ? QStringLiteral("color: #34d399; font-weight: 700;")
+                                                  : QStringLiteral("color: #f87171; font-weight: 700;"));
                 m_status->setText(reachable
                                       ? (version.isEmpty()
                                              ? QStringLiteral("Servidor en línea")
@@ -262,7 +259,7 @@ void LoginDialog::setBusy(bool busy)
 {
     m_loginButton->setEnabled(!busy);
     m_cancelButton->setEnabled(!busy);
-    m_loginButton->setText(busy ? QStringLiteral("CONECTANDO...") : QStringLiteral("INICIAR SESIÓN"));
+    m_loginButton->setText(busy ? QStringLiteral("CONECTANDO…") : QStringLiteral("INICIAR SESIÓN"));
     m_progress->setVisible(busy);
 }
 
