@@ -22,6 +22,10 @@ Inspirado en el launcher WPF de SKYNET escrito en **Qt 6 / C++** (Widgets + Netw
   integrada con catálogo, filtros, saldo, inventario, actividad y compra. Usa
   directamente el bearer token del perfil activo; no abre navegador ni usa
   cookies.
+- **Ranking nativo**: la sección `RANKING` muestra jugadores calibrados
+  ordenados por MMR, medalla, estado en línea y estadísticas básicas mediante
+  `GET /api/ranking`. Tiene estados separados para sesión requerida, carga,
+  error y ranking sin jugadores.
 - **Perfil de la cuenta activa**: nombre, AccountId, SteamId y nivel desde
   `GET /api/users/me`.
 - **Detección de Dota 2**: valida el path guardado, acepta raíz de Dota/Steam o
@@ -77,7 +81,7 @@ src/
   config/    AppConfig + ConfigStore (config.json en %APPDATA%\D2MaxLauncher)
   net/       ServerClient (login, version, me y tienda nativa — JSON PascalCase)
   launch/    GameLauncher, DllInjector, PeUtils, IniGenerator, DotaPathDetector
-  ui/        LoginDialog + MainWindow + StoreView (tema oscuro QSS)
+  ui/        LoginDialog + MainWindow + StoreView + RankingView (tema oscuro QSS)
   util/      Log
 resources/   theme.qss
 ```
@@ -91,4 +95,6 @@ resources/   theme.qss
 - Icono/avatares de cuenta desde `GET /api/users/{steamId}/avatar`.
 - Validación end-to-end de la tienda en Windows con compra, sesión revocada y
   recepción del inventario en el cliente real.
+- Validación visual de `RANKING` en Windows con cuentas calibradas, orden MMR,
+  medallas y estado vacío.
 - Instalador (windeployqt) y actualización automática del payload.

@@ -68,6 +68,34 @@ struct StorePurchaseData
     QVector<StoreInventoryItemData> items;
 };
 
+struct RankingEntryData
+{
+    int position = 0;
+    quint32 accountId = 0;
+    QString steamId;
+    QString username;
+    QString personaName;
+    bool online = false;
+    int mmr = 0;
+    int rankTier = 0;
+    int rankStar = 0;
+    int rankValue = 0;
+    int rankProgress = 0;
+    bool calibrated = false;
+    int games = 0;
+    int wins = 0;
+    int losses = 0;
+    int winRatePercent = 0;
+};
+
+struct RankingPageData
+{
+    QVector<RankingEntryData> items;
+    int page = 1;
+    int pageSize = 50;
+    int totalCount = 0;
+};
+
 /// Talks to the D2ST server. The wire format is PascalCase JSON (the server
 /// serializes with PropertyNamingPolicy = null), so all keys below are exact.
 class ServerClient : public QObject
@@ -92,6 +120,9 @@ public:
 
     /// GET /api/users/me/rank — the caller's MMR and medal.
     void fetchRank(const QString &token);
+
+    /// GET /api/ranking — calibrated players ordered by MMR.
+    quint64 fetchRanking(const QString &token, int page = 1, int pageSize = 50);
 
     /// GET /api/users/{steamId}/avatar — the avatar PNG bytes.
     void fetchAvatar(quint64 steamId, const QString &token);
@@ -122,6 +153,8 @@ signals:
     void meFinished(bool ok, const QString &error, const QString &personaName,
                     quint32 accountId, quint64 steamId, int playerLevel);
     void rankFinished(bool ok, int mmr, int rankTier, int rankStar);
+    void rankingFinished(quint64 requestId, bool ok, const QString &error,
+                         const RankingPageData &page);
     void avatarFinished(bool ok, const QByteArray &png);
     void storeCatalogFinished(bool ok, const QString &error,
                               const StoreCatalogPageData &page);
@@ -146,4 +179,5 @@ private:
 
     QNetworkAccessManager m_nam;
     QString m_baseUrl;
+    quint64 m_nextRankingRequestId = 0;
 };

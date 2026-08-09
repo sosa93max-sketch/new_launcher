@@ -118,3 +118,37 @@ porque Qt6 y el cliente Dota objetivo no están disponibles en este entorno. La
 configuración CMake llega correctamente al chequeo de Qt6; la prueba pendiente
 debe abrir la tienda sin sesión, iniciar sesión desde la propia vista y comprar
 un artículo sin reiniciar Dota.
+
+## Sesión 25 — ranking nativo del launcher
+
+La UI modificada en `origin/main` quedó sincronizada primero y se conserva como
+base. Sobre ese diseño compacto se agregó una tercera sección nativa:
+
+- `MainWindow` añade `RANKING` al rail lateral y un `QStackedWidget` con
+  `RankingView`; el login, logout y cambio de perfil actualizan la tienda y el
+  ranking con el mismo bearer token.
+- `ServerClient` consume `GET /api/ranking?page=1&pageSize=50` y conserva el
+  SteamId como texto para no perder precisión al parsear ids de 64 bits.
+- La vista muestra posición, icono de medalla, nombre, presencia, MMR, nombre
+  de medalla/estrellas y partidas, victorias, derrotas y porcentaje de victoria.
+  Sus tarjetas mantienen los mismos márgenes, radios, bordes, gradientes y
+  densidad visual de la UI de tienda actual.
+- El endpoint del servidor lista solo cuentas calibradas y ordena por MMR
+  descendente, victorias, partidas y AccountId. La respuesta paginada permite
+  que la tabla no dependa de cargar todos los usuarios en el launcher.
+- Sesión requerida, carga, error y `Aún no hay jugadores clasificados` son
+  estados visuales independientes; el ranking vacío no se confunde con una
+  caída del servidor.
+
+Fuente de medallas verificada: el tracking público de los archivos de Dota 2
+identifica `dota/pak01_dir.vpk` y las rutas internas
+`panorama/images/rank_tier_icons/rank0_psd.vtex_c` hasta
+`rank8_psd.vtex_c`. Son recursos Valve compilados (`.vtex_c`), no PNG que Qt
+pueda abrir directamente. Por eso `RankingView` usa un badge vectorial local
+por tier, sin CDN ni sesión web; el comentario del código conserva la ruta
+oficial para sustituirlo por una extracción del VPK cuando se distribuya esa
+herramienta/asset en el entorno Windows.
+
+Evidencia: `git diff --check` pasa. CMake alcanza el chequeo de Qt6 pero este
+entorno Linux no tiene Qt6 instalado; falta compilar/visualizar en Windows o
+CI con Qt6 y comprobar el ranking contra una base con partidas calibradas.

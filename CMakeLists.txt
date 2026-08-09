@@ -34,6 +34,8 @@ qt_add_executable(D2MaxLauncher WIN32
     src/ui/MainWindow.h
     src/ui/StoreView.cpp
     src/ui/StoreView.h
+    src/ui/RankingView.cpp
+    src/ui/RankingView.h
     resources/resources.qrc
 )
 

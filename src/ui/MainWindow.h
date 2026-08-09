@@ -13,6 +13,7 @@ class QLineEdit;
 class QPushButton;
 class QStackedWidget;
 class QStatusBar;
+class RankingView;
 class StoreView;
 
 class MainWindow : public QMainWindow
@@ -42,6 +43,7 @@ private:
     void logout();
     void play();
     void openStore();
+    void openRanking();
     void stop();
     void refreshStatus();
     void monitorProcess();
@@ -64,8 +66,10 @@ private:
     QPushButton *m_playButton = nullptr;
     QPushButton *m_homeButton = nullptr;
     QPushButton *m_storeButton = nullptr;
+    QPushButton *m_rankingButton = nullptr;
     QStackedWidget *m_pageStack = nullptr;
     StoreView *m_storeView = nullptr;
+    RankingView *m_rankingView = nullptr;
     QStatusBar *m_statusBar = nullptr;
 
     QTimer m_statusTimer;

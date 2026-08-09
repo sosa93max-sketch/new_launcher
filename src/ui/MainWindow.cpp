@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 
 #include "LoginDialog.h"
+#include "RankingView.h"
 #include "StoreView.h"
 
 #include "../launch/DotaPathDetector.h"
@@ -150,6 +151,11 @@ void MainWindow::buildDashboardUi()
     m_storeButton->setObjectName(QStringLiteral("NavButton"));
     m_storeButton->setMinimumHeight(38);
     sideLayout->addWidget(m_storeButton);
+
+    m_rankingButton = new QPushButton(QStringLiteral("  RANKING"), sidebar);
+    m_rankingButton->setObjectName(QStringLiteral("NavButton"));
+    m_rankingButton->setMinimumHeight(38);
+    sideLayout->addWidget(m_rankingButton);
 
     auto *sideInfo = new QFrame(sidebar);
     sideInfo->setObjectName(QStringLiteral("SidebarStatus"));
@@ -373,6 +379,8 @@ void MainWindow::buildDashboardUi()
     m_pageStack->addWidget(dashboardScroll);
     m_storeView = new StoreView(m_server, m_pageStack);
     m_pageStack->addWidget(m_storeView);
+    m_rankingView = new RankingView(m_server, m_pageStack);
+    m_pageStack->addWidget(m_rankingView);
     shell->addWidget(m_pageStack, 1);
 
     setCentralWidget(central);
@@ -381,12 +389,21 @@ void MainWindow::buildDashboardUi()
 
     connect(m_homeButton, &QPushButton::clicked, this, &MainWindow::showDashboard);
     connect(m_storeButton, &QPushButton::clicked, this, &MainWindow::openStore);
+    connect(m_rankingButton, &QPushButton::clicked, this, &MainWindow::openRanking);
     connect(m_storeView, &StoreView::backRequested, this, &MainWindow::showDashboard);
     connect(m_storeView, &StoreView::loginRequested, this, [this]() {
         if (addAccount())
         {
             m_storeView->setSessionToken(currentToken());
             m_storeView->reload();
+        }
+    });
+    connect(m_rankingView, &RankingView::backRequested, this, &MainWindow::showDashboard);
+    connect(m_rankingView, &RankingView::loginRequested, this, [this]() {
+        if (addAccount())
+        {
+            m_rankingView->setSessionToken(currentToken());
+            m_rankingView->reload();
         }
     });
     connect(logoutButton, &QPushButton::clicked, this, &MainWindow::logout);
@@ -527,6 +544,8 @@ void MainWindow::applyCurrentProfile()
         m_level->setText(QStringLiteral("Nivel --"));
         if (m_storeView)
             m_storeView->setSessionToken(QString());
+        if (m_rankingView)
+            m_rankingView->setSessionToken(QString());
         return;
     }
     const QString name = it->displayName.isEmpty() ? it->username : it->displayName;
@@ -540,6 +559,8 @@ void MainWindow::applyCurrentProfile()
     m_level->setText(QStringLiteral("Nivel --"));
     if (m_storeView)
         m_storeView->setSessionToken(it->token);
+    if (m_rankingView)
+        m_rankingView->setSessionToken(it->token);
 }
 
 QString MainWindow::currentToken() const
@@ -559,7 +580,8 @@ void MainWindow::showDashboard()
     m_pageStack->setCurrentIndex(0);
     m_homeButton->setObjectName(QStringLiteral("NavButtonActive"));
     m_storeButton->setObjectName(QStringLiteral("NavButton"));
-    for (auto *button : {m_homeButton, m_storeButton})
+    m_rankingButton->setObjectName(QStringLiteral("NavButton"));
+    for (auto *button : {m_homeButton, m_storeButton, m_rankingButton})
     {
         if (button && button->style())
         {
@@ -651,6 +673,8 @@ void MainWindow::logout()
     m_store.save();
     if (m_storeView)
         m_storeView->setSessionToken(QString());
+    if (m_rankingView)
+        m_rankingView->setSessionToken(QString());
     showDashboard();
 
     hide();
@@ -735,7 +759,8 @@ void MainWindow::openStore()
     m_pageStack->setCurrentIndex(1);
     m_homeButton->setObjectName(QStringLiteral("NavButton"));
     m_storeButton->setObjectName(QStringLiteral("NavButtonActive"));
-    for (auto *button : {m_homeButton, m_storeButton})
+    m_rankingButton->setObjectName(QStringLiteral("NavButton"));
+    for (auto *button : {m_homeButton, m_storeButton, m_rankingButton})
     {
         if (button && button->style())
         {
@@ -745,6 +770,26 @@ void MainWindow::openStore()
     }
     m_statusBar->showMessage(QStringLiteral("Tienda integrada abierta"));
     m_storeView->reload();
+}
+
+void MainWindow::openRanking()
+{
+    const auto token = currentToken();
+    m_rankingView->setSessionToken(token);
+    m_pageStack->setCurrentIndex(2);
+    m_homeButton->setObjectName(QStringLiteral("NavButton"));
+    m_storeButton->setObjectName(QStringLiteral("NavButton"));
+    m_rankingButton->setObjectName(QStringLiteral("NavButtonActive"));
+    for (auto *button : {m_homeButton, m_storeButton, m_rankingButton})
+    {
+        if (button && button->style())
+        {
+            button->style()->unpolish(button);
+            button->style()->polish(button);
+        }
+    }
+    m_statusBar->showMessage(QStringLiteral("Ranking integrado abierto"));
+    m_rankingView->reload();
 }
 
 void MainWindow::stop()

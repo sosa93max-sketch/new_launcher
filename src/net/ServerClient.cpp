@@ -112,6 +112,39 @@ QVector<StoreInventoryItemData> inventoryList(const QJsonObject &object)
         items.append(inventoryItem(value.toObject()));
     return items;
 }
+
+RankingEntryData rankingEntry(const QJsonObject &object)
+{
+    RankingEntryData entry;
+    entry.position = object.value(QStringLiteral("Position")).toInt(0);
+    entry.accountId = static_cast<quint32>(integerValue(object, "AccountId"));
+    entry.steamId = object.value(QStringLiteral("SteamId")).toString();
+    entry.username = object.value(QStringLiteral("Username")).toString();
+    entry.personaName = object.value(QStringLiteral("PersonaName")).toString();
+    entry.online = object.value(QStringLiteral("Online")).toBool(false);
+    entry.mmr = object.value(QStringLiteral("Mmr")).toInt(0);
+    entry.rankTier = object.value(QStringLiteral("RankTier")).toInt(0);
+    entry.rankStar = object.value(QStringLiteral("RankStar")).toInt(0);
+    entry.rankValue = object.value(QStringLiteral("RankValue")).toInt(0);
+    entry.rankProgress = object.value(QStringLiteral("RankProgress")).toInt(0);
+    entry.calibrated = object.value(QStringLiteral("IsCalibrated")).toBool(false);
+    entry.games = object.value(QStringLiteral("Games")).toInt(0);
+    entry.wins = object.value(QStringLiteral("Wins")).toInt(0);
+    entry.losses = object.value(QStringLiteral("Losses")).toInt(0);
+    entry.winRatePercent = object.value(QStringLiteral("WinRatePercent")).toInt(0);
+    return entry;
+}
+
+RankingPageData rankingPage(const QJsonObject &object)
+{
+    RankingPageData page;
+    for (const auto &value : object.value(QStringLiteral("Items")).toArray())
+        page.items.append(rankingEntry(value.toObject()));
+    page.page = object.value(QStringLiteral("Page")).toInt(1);
+    page.pageSize = object.value(QStringLiteral("PageSize")).toInt(50);
+    page.totalCount = object.value(QStringLiteral("TotalCount")).toInt(0);
+    return page;
+}
 }
 
 ServerClient::ServerClient(QObject *parent)
@@ -281,6 +314,47 @@ void ServerClient::fetchRank(const QString &token)
         reply->deleteLater();
         emit rankFinished(true, mmr, tier, star);
     });
+}
+
+quint64 ServerClient::fetchRanking(const QString &token, int page, int pageSize)
+{
+    const auto requestId = ++m_nextRankingRequestId;
+    QUrl url(m_baseUrl + QStringLiteral("api/ranking"));
+    QUrlQuery query;
+    query.addQueryItem(QStringLiteral("page"), QString::number(qMax(1, page)));
+    query.addQueryItem(QStringLiteral("pageSize"), QString::number(qBound(10, pageSize, 100)));
+    url.setQuery(query);
+
+    QNetworkRequest request(url);
+    request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+    auto *reply = m_nam.get(request);
+    connect(reply, &QNetworkReply::finished, this, [this, reply, requestId]() {
+        const auto raw = reply->readAll();
+        if (!isSuccessful(reply))
+        {
+            emit rankingFinished(requestId, false,
+                                 reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 401
+                                     ? QStringLiteral("SESSION_EXPIRED")
+                                     : errorText(reply, QStringLiteral("No se pudo cargar el ranking"), raw),
+                                 RankingPageData{});
+            reply->deleteLater();
+            return;
+        }
+
+        const auto document = QJsonDocument::fromJson(raw);
+        if (!document.isObject())
+        {
+            emit rankingFinished(requestId, false,
+                                 QStringLiteral("El ranking devolvió una respuesta inválida"),
+                                 RankingPageData{});
+            reply->deleteLater();
+            return;
+        }
+
+        emit rankingFinished(requestId, true, QString(), rankingPage(document.object()));
+        reply->deleteLater();
+    });
+    return requestId;
 }
 
 void ServerClient::fetchAvatar(quint64 steamId, const QString &token)
