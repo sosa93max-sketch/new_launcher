@@ -38,20 +38,13 @@ Source 2 rechaza la siguiente.
   cambiar antes de cada lanzamiento. Confirmar también que no quede
   `dota2.exe` con esa ruta en Task Manager.
 
-## Tienda web
+## Tienda integrada
 
-El botón `TIENDA` usa el bearer token de la cuenta activa únicamente para
-solicitar `POST /api/store/handoff`. El servidor devuelve un código efímero de
-un solo uso; el launcher abre `/store?ticket=...` en el navegador predeterminado
-y el servidor convierte ese código en una cookie `HttpOnly` limitada a la API de
-la tienda. El token permanente nunca se coloca en la URL ni se entrega al
-navegador.
-
-La tienda consume el catálogo, saldo, inventario, historial y compra REST del
-servidor. La cuenta usada es siempre el perfil activo del launcher, por lo que
-no aparece un segundo formulario de login. Si el servidor se reinició, el token
-guardado puede haber expirado y el launcher debe volver a validar o iniciar la
-sesión antes de abrir la tienda.
+El botón `TIENDA` cambia a una vista Qt nativa dentro del launcher. La vista
+consume catálogo, filtros, saldo, inventario, historial y compra directamente
+con el bearer token del perfil activo; no abre navegador, no usa cookies y no
+crea una segunda sesión. Las respuestas HTTP 401 muestran una puerta de sesión
+expirada que permite volver al login del launcher.
 
 La prueba manual en Windows debe cubrir: iniciar sesión con A, pulsar `TIENDA`,
 comprar un producto activo, confirmar el artículo en el inventario de Dota,
@@ -76,8 +69,7 @@ Se corrigieron los pendientes de la revisión del launcher:
   bibliotecas Steam, registro de Windows, variables de entorno y candidatos
   comunes de las unidades. `play()` vuelve a resolver la ruta antes de lanzar.
 - Cuando el launcher llama a `/api/presence/offline`, el servidor revoca el
-  mismo token usado por el handoff de la tienda; una pestaña abierta pierde el
-  acceso mediante el heartbeat web.
+  bearer activo; cualquier llamada posterior a la tienda nativa recibe 401.
 
 `git diff --check` pasa. La configuración CMake fue intentada en Linux, pero
 este entorno no tiene Qt6 instalado; la compilación final debe ejecutarse en la
@@ -86,7 +78,7 @@ máquina Windows/CI con Qt6 y el payload `steam_api64.dll` disponible.
 ## Sesión 23 — rediseño total del dashboard
 
 `MainWindow` conserva las conexiones de login, estado del servidor, avatar,
-rank, handoff seguro de tienda, autodetección, configuración de argumentos y
+rank, navegación de tienda, autodetección, configuración de argumentos y
 lanzamiento, pero ahora presenta una UI completamente nueva:
 
 - barra lateral con marca, navegación a tienda, estado de sesión y cierre de
@@ -98,11 +90,31 @@ lanzamiento, pero ahora presenta una UI completamente nueva:
 - tema visual nuevo con jerarquía glassmorphism, gradientes, sombras, estados y
   tarjetas responsive para el dashboard.
 
-La tienda web ya tiene su propia pantalla de sesión cerrada; el launcher solo
-abre el handoff autenticado y no expone el token permanente al navegador.
-
 Verificación: `git diff --check` pasa. CMake se configuró hasta el chequeo de
 dependencia, pero este entorno Linux no tiene Qt6; el build MinGW/Qt6 y la
 prueba visual de la nueva UI deben ejecutarse en Windows/CI. La validación
 pendiente también debe comprar un item desde la tienda y comprobar que Dota lo
 recibe sin reinicio.
+
+## Sesión 24 — tienda nativa y refinamiento visual
+
+Se reemplazó la navegación web por una experiencia integrada:
+
+- `StoreView` incorpora encabezado, saldo, filtros, catálogo paginado, precios
+  Steam/locales, compra, inventario y actividad en tarjetas con scroll;
+- el token del perfil se pasa directamente a `ServerClient` para todas las
+  llamadas `/api/store/*`, eliminando el problema de sesión desalineada entre
+  launcher y navegador;
+- el dashboard ahora usa `QStackedWidget`, navegación `INICIO`/`TIENDA`, scroll
+  vertical y geometría más amplia para evitar cortes de contenido;
+- el tema define bordes, espacios, alturas, estados, botones y tarjetas de la
+  tienda con una escala consistente;
+- sin sesión, la tienda cambia a una pantalla informativa con acceso directo al
+  diálogo de login, oculta filtros y controles de compra y no deja que una
+  respuesta atrasada vuelva a mostrar datos de la cuenta anterior.
+
+La compilación Qt6 y la validación visual/funcional con Windows siguen pendientes
+porque Qt6 y el cliente Dota objetivo no están disponibles en este entorno. La
+configuración CMake llega correctamente al chequeo de Qt6; la prueba pendiente
+debe abrir la tienda sin sesión, iniciar sesión desde la propia vista y comprar
+un artículo sin reiniciar Dota.

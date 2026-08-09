@@ -3,15 +3,14 @@
 #include "../util/Log.h"
 
 #include <QJsonDocument>
-#include <QJsonParseError>
+#include <QJsonArray>
 #include <QEventLoop>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QRegularExpression>
 #include <QTimer>
 #include <QUrl>
-
-#include <utility>
+#include <QUrlQuery>
 
 static const QLatin1String KeyUsername("Username");
 static const QLatin1String KeyPassword("Password");
@@ -37,6 +36,82 @@ quint64 readBigInt(const QByteArray &raw, const QByteArray &key)
     const auto match = pattern.match(QString::fromUtf8(raw));
     return match.hasMatch() ? match.captured(1).toULongLong() : 0;
 }
+
+qint64 integerValue(const QJsonObject &object, const char *key)
+{
+    return static_cast<qint64>(object.value(QString::fromLatin1(key)).toDouble(0));
+}
+
+QVector<QString> stringList(const QJsonValue &value)
+{
+    QVector<QString> values;
+    for (const auto &entry : value.toArray())
+    {
+        const auto text = entry.toString().trimmed();
+        if (!text.isEmpty())
+            values.append(text);
+    }
+    return values;
+}
+
+StoreCatalogItemData catalogItem(const QJsonObject &object)
+{
+    StoreCatalogItemData item;
+    item.productId = static_cast<quint32>(integerValue(object, "ProductId"));
+    item.defIndex = static_cast<quint32>(integerValue(object, "DefIndex"));
+    item.name = object.value(QStringLiteral("Name")).toString();
+    item.productType = object.value(QStringLiteral("ProductType")).toInt(0);
+    item.priceDollars = integerValue(object, "PriceDollars");
+    item.category = object.value(QStringLiteral("Category")).toString();
+    item.description = object.value(QStringLiteral("Description")).toString();
+    item.active = object.value(QStringLiteral("Active")).toBool(false);
+    item.ownedQuantity = static_cast<quint32>(integerValue(object, "OwnedQuantity"));
+    item.marketLowestPriceCents = integerValue(object, "MarketLowestPriceCents");
+    item.marketMedianPriceCents = integerValue(object, "MarketMedianPriceCents");
+    item.marketPriceStatus = object.value(QStringLiteral("MarketPriceStatus")).toString();
+    item.heroes = stringList(object.value(QStringLiteral("Heroes")));
+    return item;
+}
+
+StoreWalletData walletData(const QJsonObject &object)
+{
+    StoreWalletData wallet;
+    wallet.balanceDollars = integerValue(object, "BalanceDollars");
+    wallet.reservedDollars = integerValue(object, "ReservedDollars");
+    wallet.availableDollars = integerValue(object, "AvailableDollars");
+    return wallet;
+}
+
+StoreInventoryItemData inventoryItem(const QJsonObject &object)
+{
+    StoreInventoryItemData item;
+    item.itemId = static_cast<quint64>(integerValue(object, "ItemId"));
+    item.defIndex = static_cast<quint32>(integerValue(object, "DefIndex"));
+    item.quantity = static_cast<quint32>(integerValue(object, "Quantity"));
+    return item;
+}
+
+StoreCatalogPageData catalogPage(const QJsonObject &object)
+{
+    StoreCatalogPageData page;
+    for (const auto &value : object.value(QStringLiteral("Items")).toArray())
+        page.items.append(catalogItem(value.toObject()));
+    page.page = object.value(QStringLiteral("Page")).toInt(1);
+    page.pageSize = object.value(QStringLiteral("PageSize")).toInt(24);
+    page.totalCount = object.value(QStringLiteral("TotalCount")).toInt(0);
+    page.activeCount = object.value(QStringLiteral("ActiveCount")).toInt(0);
+    page.categories = stringList(object.value(QStringLiteral("Categories")));
+    page.heroes = stringList(object.value(QStringLiteral("Heroes")));
+    return page;
+}
+
+QVector<StoreInventoryItemData> inventoryList(const QJsonObject &object)
+{
+    QVector<StoreInventoryItemData> items;
+    for (const auto &value : object.value(QStringLiteral("Items")).toArray())
+        items.append(inventoryItem(value.toObject()));
+    return items;
+}
 }
 
 ServerClient::ServerClient(QObject *parent)
@@ -53,11 +128,15 @@ void ServerClient::setBaseUrl(const QString &url)
     m_baseUrl = normalized;
 }
 
-QNetworkReply *ServerClient::postJson(const QString &path, const QJsonObject &body)
+QNetworkReply *ServerClient::postJson(const QString &path,
+                                      const QJsonObject &body,
+                                      const QString &token)
 {
     QNetworkRequest request(QUrl(m_baseUrl + path));
     request.setHeader(QNetworkRequest::ContentTypeHeader,
                       QStringLiteral("application/json"));
+    if (!token.isEmpty())
+        request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
     return m_nam.post(request, QJsonDocument(body).toJson(QJsonDocument::Compact));
 }
 
@@ -69,16 +148,41 @@ QNetworkReply *ServerClient::getJson(const QString &path, const QString &token)
     return m_nam.get(request);
 }
 
-QString ServerClient::errorText(QNetworkReply *reply, const QString &fallback)
+bool ServerClient::isSuccessful(QNetworkReply *reply)
+{
+    const auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    return reply->error() == QNetworkReply::NoError && (status == 0 || (status >= 200 && status < 300));
+}
+
+QString ServerClient::errorText(QNetworkReply *reply,
+                                const QString &fallback,
+                                const QByteArray &body)
 {
     if (reply->error() == QNetworkReply::OperationCanceledError)
         return QStringLiteral("Sin respuesta del servidor");
     if (reply->error() == QNetworkReply::ConnectionRefusedError)
         return QStringLiteral("Servidor no accesible");
-    if (reply->error() == QNetworkReply::AuthenticationRequiredError)
-        return QStringLiteral("Usuario o contraseña incorrectos");
-    const auto body = QString::fromUtf8(reply->readAll()).trimmed();
-    return body.isEmpty() ? fallback : QStringLiteral("%1: %2").arg(fallback, body);
+    const auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    if (status == 401 || reply->error() == QNetworkReply::AuthenticationRequiredError)
+        return fallback;
+
+    const auto payload = body.isEmpty() ? reply->readAll() : body;
+    const auto document = QJsonDocument::fromJson(payload);
+    if (document.isObject())
+    {
+        const auto object = document.object();
+        const auto message = object.value(QStringLiteral("Message")).toString(
+            object.value(QStringLiteral("message")).toString());
+        if (!message.trimmed().isEmpty())
+            return message.trimmed();
+        const auto code = object.value(QStringLiteral("Code")).toString(
+            object.value(QStringLiteral("code")).toString());
+        if (!code.trimmed().isEmpty())
+            return QStringLiteral("%1 (%2)").arg(fallback, code.trimmed());
+    }
+
+    const auto text = QString::fromUtf8(payload).trimmed();
+    return text.isEmpty() ? fallback : QStringLiteral("%1: %2").arg(fallback, text);
 }
 
 void ServerClient::ping()
@@ -86,12 +190,12 @@ void ServerClient::ping()
     auto *reply = getJson(QStringLiteral("api/version"), QString());
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         QString version;
-        if (reply->error() == QNetworkReply::NoError)
+        if (isSuccessful(reply))
         {
             const auto object = QJsonDocument::fromJson(reply->readAll()).object();
             version = object.value(KeyVersion).toString();
         }
-        const bool reachable = reply->error() == QNetworkReply::NoError;
+        const bool reachable = isSuccessful(reply);
         reply->deleteLater();
         emit pingFinished(reachable, version);
     });
@@ -106,10 +210,12 @@ void ServerClient::login(const QString &username, const QString &password)
 
     auto *reply = postJson(QStringLiteral("api/auth/login"), body);
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-        if (reply->error() != QNetworkReply::NoError)
+        if (!isSuccessful(reply))
         {
-            Log::line(QStringLiteral("LOGIN failed: %1").arg(errorText(reply, QStringLiteral("Error de servidor"))));
-            emit loginFinished(false, errorText(reply, QStringLiteral("Error de servidor")),
+            const auto raw = reply->readAll();
+            const auto error = errorText(reply, QStringLiteral("Usuario o contraseña incorrectos"), raw);
+            Log::line(QStringLiteral("LOGIN failed: %1").arg(error));
+            emit loginFinished(false, error,
                                QString(), 0, 0);
             reply->deleteLater();
             return;
@@ -137,9 +243,10 @@ void ServerClient::me(const QString &token)
 {
     auto *reply = getJson(QStringLiteral("api/users/me"), token);
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-        if (reply->error() != QNetworkReply::NoError)
+        if (!isSuccessful(reply))
         {
-            emit meFinished(false, errorText(reply, QStringLiteral("Sesión no válida")),
+            const auto raw = reply->readAll();
+            emit meFinished(false, errorText(reply, QStringLiteral("Sesión no válida"), raw),
                             QString(), 0, 0, 0);
             reply->deleteLater();
             return;
@@ -160,7 +267,7 @@ void ServerClient::fetchRank(const QString &token)
 {
     auto *reply = getJson(QStringLiteral("api/users/me/rank"), token);
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-        if (reply->error() != QNetworkReply::NoError)
+        if (!isSuccessful(reply))
         {
             emit rankFinished(false, 0, 1, 1);
             reply->deleteLater();
@@ -180,7 +287,7 @@ void ServerClient::fetchAvatar(quint64 steamId, const QString &token)
 {
     auto *reply = getJson(QStringLiteral("api/users/%1/avatar").arg(steamId), token);
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-        if (reply->error() != QNetworkReply::NoError)
+        if (!isSuccessful(reply))
         {
             emit avatarFinished(false, QByteArray());
             reply->deleteLater();
@@ -219,38 +326,170 @@ void ServerClient::logout(const QString &token, bool waitForDelivery)
     Log::line(QStringLiteral("LOGOUT POST api/presence/offline"));
 }
 
-void ServerClient::createStoreHandoff(const QString &token)
+void ServerClient::fetchStoreCatalog(const QString &token,
+                                     int page,
+                                     int pageSize,
+                                     const QString &search,
+                                     const QString &category,
+                                     const QString &hero,
+                                     int type)
 {
-    QNetworkRequest request(QUrl(m_baseUrl + QStringLiteral("api/store/handoff")));
-    request.setHeader(QNetworkRequest::ContentTypeHeader,
-                      QStringLiteral("application/json"));
-    if (!token.isEmpty())
-        request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+    QUrl url(m_baseUrl + QStringLiteral("api/store/catalog/page"));
+    QUrlQuery query;
+    query.addQueryItem(QStringLiteral("page"), QString::number(qMax(1, page)));
+    query.addQueryItem(QStringLiteral("pageSize"), QString::number(qBound(10, pageSize, 100)));
+    if (!search.trimmed().isEmpty())
+        query.addQueryItem(QStringLiteral("search"), search.trimmed());
+    if (!category.trimmed().isEmpty())
+        query.addQueryItem(QStringLiteral("category"), category.trimmed());
+    if (!hero.trimmed().isEmpty())
+        query.addQueryItem(QStringLiteral("hero"), hero.trimmed());
+    if (type >= 0)
+        query.addQueryItem(QStringLiteral("type"), QString::number(type));
+    url.setQuery(query);
 
-    auto *reply = m_nam.post(request, QByteArrayLiteral("{}"));
+    QNetworkRequest request(url);
+    request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+    auto *reply = m_nam.get(request);
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-        if (reply->error() != QNetworkReply::NoError)
+        const auto raw = reply->readAll();
+        if (!isSuccessful(reply))
         {
-            const auto error = errorText(reply, QStringLiteral("No se pudo abrir la tienda"));
-            emit storeHandoffFinished(false, error, QString());
+            emit storeCatalogFinished(false,
+                                      reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 401
+                                          ? QStringLiteral("SESSION_EXPIRED")
+                                          : errorText(reply, QStringLiteral("No se pudo cargar el catálogo"), raw),
+                                      StoreCatalogPageData{});
             reply->deleteLater();
             return;
         }
 
-        const auto object = QJsonDocument::fromJson(reply->readAll()).object();
-        const auto path = object.value(QStringLiteral("Path")).toString();
-        reply->deleteLater();
-        if (path.isEmpty())
+        const auto document = QJsonDocument::fromJson(raw);
+        if (!document.isObject())
         {
-            emit storeHandoffFinished(false, QStringLiteral("El servidor no devolvió el enlace de la tienda"), QString());
+            emit storeCatalogFinished(false, QStringLiteral("El catálogo devolvió una respuesta inválida"),
+                                      StoreCatalogPageData{});
+            reply->deleteLater();
             return;
         }
-
-        emit storeHandoffFinished(true, QString(), path);
+        emit storeCatalogFinished(true, QString(), catalogPage(document.object()));
+        reply->deleteLater();
     });
 }
 
-QUrl ServerClient::urlForPath(const QString &path) const
+void ServerClient::fetchStoreWallet(const QString &token)
 {
-    return QUrl(m_baseUrl).resolved(QUrl(path));
+    auto *reply = getJson(QStringLiteral("api/store/wallet"), token);
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        const auto raw = reply->readAll();
+        if (!isSuccessful(reply))
+        {
+            emit storeWalletFinished(false,
+                                     reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 401
+                                         ? QStringLiteral("SESSION_EXPIRED")
+                                         : errorText(reply, QStringLiteral("No se pudo cargar el saldo"), raw),
+                                     StoreWalletData{});
+            reply->deleteLater();
+            return;
+        }
+        emit storeWalletFinished(true, QString(), walletData(QJsonDocument::fromJson(raw).object()));
+        reply->deleteLater();
+    });
+}
+
+void ServerClient::fetchStoreInventory(const QString &token)
+{
+    auto *reply = getJson(QStringLiteral("api/store/inventory"), token);
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        const auto raw = reply->readAll();
+        if (!isSuccessful(reply))
+        {
+            emit storeInventoryFinished(false,
+                                        reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 401
+                                            ? QStringLiteral("SESSION_EXPIRED")
+                                            : errorText(reply, QStringLiteral("No se pudo cargar el inventario"), raw),
+                                        {});
+            reply->deleteLater();
+            return;
+        }
+        emit storeInventoryFinished(true, QString(),
+                                    inventoryList(QJsonDocument::fromJson(raw).object()));
+        reply->deleteLater();
+    });
+}
+
+void ServerClient::fetchStoreTransactions(const QString &token, int limit)
+{
+    QUrl url(m_baseUrl + QStringLiteral("api/store/transactions"));
+    QUrlQuery query;
+    query.addQueryItem(QStringLiteral("limit"), QString::number(qBound(1, limit, 50)));
+    url.setQuery(query);
+    QNetworkRequest request(url);
+    request.setRawHeader("Authorization", "Bearer " + token.toUtf8());
+    auto *reply = m_nam.get(request);
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        const auto raw = reply->readAll();
+        if (!isSuccessful(reply))
+        {
+            emit storeTransactionsFinished(false,
+                                           reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 401
+                                               ? QStringLiteral("SESSION_EXPIRED")
+                                               : errorText(reply, QStringLiteral("No se pudo cargar la actividad"), raw),
+                                           {});
+            reply->deleteLater();
+            return;
+        }
+
+        QVector<StoreTransactionData> items;
+        const auto document = QJsonDocument::fromJson(raw);
+        for (const auto &value : document.array())
+        {
+            const auto object = value.toObject();
+            StoreTransactionData item;
+            item.reference = object.value(QStringLiteral("Reference")).toString();
+            item.amountDollars = integerValue(object, "AmountDollars");
+            item.createdAt = object.value(QStringLiteral("CreatedAt")).toString();
+            items.append(item);
+        }
+        emit storeTransactionsFinished(true, QString(), items);
+        reply->deleteLater();
+    });
+}
+
+void ServerClient::purchaseStoreItem(const QString &token, quint32 productId, quint32 quantity)
+{
+    QJsonObject body;
+    body.insert(QStringLiteral("ProductId"), static_cast<int>(productId));
+    body.insert(QStringLiteral("Quantity"), static_cast<int>(qMax(1u, quantity)));
+    auto *reply = postJson(QStringLiteral("api/store/purchase"), body, token);
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        const auto raw = reply->readAll();
+        const auto document = QJsonDocument::fromJson(raw);
+        const auto object = document.object();
+        StorePurchaseData purchase;
+        purchase.success = object.value(QStringLiteral("Success")).toBool(false);
+        purchase.code = object.value(QStringLiteral("Code")).toString();
+        purchase.message = object.value(QStringLiteral("Message")).toString();
+        purchase.wallet = walletData(object.value(QStringLiteral("Wallet")).toObject());
+        for (const auto &value : object.value(QStringLiteral("Items")).toArray())
+            purchase.items.append(inventoryItem(value.toObject()));
+
+        if (!isSuccessful(reply))
+        {
+            emit storePurchaseFinished(false,
+                                       reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 401
+                                           ? QStringLiteral("SESSION_EXPIRED")
+                                           : errorText(reply, purchase.message.isEmpty()
+                                                           ? QStringLiteral("La compra no pudo completarse")
+                                                           : purchase.message,
+                                                       raw),
+                                       purchase);
+            reply->deleteLater();
+            return;
+        }
+        emit storePurchaseFinished(purchase.success,
+                                   purchase.message,
+                                   purchase);
+        reply->deleteLater();
+    });
 }

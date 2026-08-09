@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 
 #include "LoginDialog.h"
+#include "StoreView.h"
 
 #include "../launch/DotaPathDetector.h"
 #include "../util/Log.h"
@@ -10,11 +11,9 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDateTime>
-#include <QDesktopServices>
 #include <QFileDialog>
 #include <QFrame>
 #include <QGraphicsDropShadowEffect>
-#include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
@@ -23,7 +22,9 @@
 #include <QPainterPath>
 #include <QPixmap>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QStringList>
+#include <QStackedWidget>
 #include <QStatusBar>
 #include <QStyle>
 #include <QVBoxLayout>
@@ -75,8 +76,8 @@ MainWindow::MainWindow(ConfigStore &store, ServerClient &server, QWidget *parent
     , m_server(server)
 {
     setWindowTitle(QStringLiteral("D2Max Launcher"));
-    resize(1040, 700);
-    setMinimumSize(900, 620);
+    resize(1240, 820);
+    setMinimumSize(1050, 700);
     buildUi();
 
     applyCurrentProfile();
@@ -101,8 +102,8 @@ void MainWindow::buildUi()
 void MainWindow::buildDashboardUi()
 {
     setWindowTitle(QStringLiteral("D2Max · Centro de juego"));
-    resize(1180, 760);
-    setMinimumSize(980, 660);
+    resize(1240, 820);
+    setMinimumSize(1050, 700);
 
     auto *central = new QWidget(this);
     central->setObjectName(QStringLiteral("LauncherRoot"));
@@ -141,8 +142,13 @@ void MainWindow::buildDashboardUi()
     navigationLabel->setObjectName(QStringLiteral("SideCaption"));
     sideLayout->addWidget(navigationLabel);
 
-    m_storeButton = new QPushButton(QStringLiteral("  TIENDA WEB"), sidebar);
-    m_storeButton->setObjectName(QStringLiteral("NavButtonActive"));
+    m_homeButton = new QPushButton(QStringLiteral("  INICIO"), sidebar);
+    m_homeButton->setObjectName(QStringLiteral("NavButtonActive"));
+    m_homeButton->setMinimumHeight(44);
+    sideLayout->addWidget(m_homeButton);
+
+    m_storeButton = new QPushButton(QStringLiteral("  TIENDA"), sidebar);
+    m_storeButton->setObjectName(QStringLiteral("NavButton"));
     m_storeButton->setMinimumHeight(44);
     sideLayout->addWidget(m_storeButton);
 
@@ -169,10 +175,19 @@ void MainWindow::buildDashboardUi()
     sideLayout->addWidget(logoutButton);
     shell->addWidget(sidebar);
 
-    auto *content = new QWidget(central);
+    m_pageStack = new QStackedWidget(central);
+    m_pageStack->setObjectName(QStringLiteral("PageStack"));
+
+    auto *dashboardScroll = new QScrollArea(m_pageStack);
+    dashboardScroll->setObjectName(QStringLiteral("DashboardScroll"));
+    dashboardScroll->setWidgetResizable(true);
+    dashboardScroll->setFrameShape(QFrame::NoFrame);
+    dashboardScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    auto *content = new QWidget;
+    content->setObjectName(QStringLiteral("DashboardPage"));
     auto *contentLayout = new QVBoxLayout(content);
-    contentLayout->setContentsMargins(0, 0, 0, 0);
-    contentLayout->setSpacing(17);
+    contentLayout->setContentsMargins(4, 4, 12, 18);
+    contentLayout->setSpacing(18);
 
     auto *topbar = new QHBoxLayout;
     auto *topCopy = new QVBoxLayout;
@@ -347,7 +362,7 @@ void MainWindow::buildDashboardUi()
     footerLayout->setContentsMargins(16, 11, 16, 11);
     auto *footerDot = new QLabel(QStringLiteral("●"), footerCard);
     footerDot->setObjectName(QStringLiteral("FooterDot"));
-    auto *footerText = new QLabel(QStringLiteral("El cliente se actualizará automáticamente al comprar desde la tienda web."), footerCard);
+    auto *footerText = new QLabel(QStringLiteral("La tienda está integrada en el launcher y comparte tu sesión con Dota 2."), footerCard);
     footerText->setObjectName(QStringLiteral("SubtitleLabel"));
     footerText->setWordWrap(true);
     footerLayout->addWidget(footerDot);
@@ -355,13 +370,26 @@ void MainWindow::buildDashboardUi()
     footerLayout->addWidget(footerText, 1);
     contentLayout->addWidget(footerCard);
     contentLayout->addStretch();
-    shell->addWidget(content, 1);
+    dashboardScroll->setWidget(content);
+    m_pageStack->addWidget(dashboardScroll);
+    m_storeView = new StoreView(m_server, m_pageStack);
+    m_pageStack->addWidget(m_storeView);
+    shell->addWidget(m_pageStack, 1);
 
     setCentralWidget(central);
     m_statusBar = statusBar();
     m_statusBar->showMessage(QStringLiteral("Listo para jugar"));
 
+    connect(m_homeButton, &QPushButton::clicked, this, &MainWindow::showDashboard);
     connect(m_storeButton, &QPushButton::clicked, this, &MainWindow::openStore);
+    connect(m_storeView, &StoreView::backRequested, this, &MainWindow::showDashboard);
+    connect(m_storeView, &StoreView::loginRequested, this, [this]() {
+        if (addAccount())
+        {
+            m_storeView->setSessionToken(currentToken());
+            m_storeView->reload();
+        }
+    });
     connect(logoutButton, &QPushButton::clicked, this, &MainWindow::logout);
     connect(browseButton, &QPushButton::clicked, this, [this]() {
         const QString path = QFileDialog::getOpenFileName(
@@ -473,30 +501,6 @@ void MainWindow::buildDashboardUi()
                 m_avatar->setText(QString());
             });
 
-    connect(&m_server, &ServerClient::storeHandoffFinished, this,
-            [this](bool ok, const QString &error, const QString &path) {
-                if (!ok)
-                {
-                    m_statusBar->showMessage(error);
-                    QMessageBox::warning(this, QStringLiteral("Tienda"), error);
-                    if (m_storeButton)
-                        m_storeButton->setEnabled(true);
-                    return;
-                }
-
-                const auto url = m_server.urlForPath(path);
-                if (!QDesktopServices::openUrl(url))
-                {
-                    QMessageBox::information(
-                        this,
-                        QStringLiteral("Tienda"),
-                        QStringLiteral("Copia este enlace en tu navegador:\n%1").arg(url.toString()));
-                }
-                m_statusBar->showMessage(QStringLiteral("Tienda abierta en el navegador"));
-                if (m_storeButton)
-                    m_storeButton->setEnabled(true);
-            });
-
     const auto detectedPath = DotaPathDetector::detect(m_dotaPath->text());
     if (!detectedPath.isEmpty() && detectedPath != m_dotaPath->text())
     {
@@ -521,6 +525,9 @@ void MainWindow::applyCurrentProfile()
         m_avatar->setPixmap(QPixmap());
         m_avatar->setText(QStringLiteral("?"));
         m_rankLabel->setText(QStringLiteral("MMR --"));
+        m_level->setText(QStringLiteral("Nivel --"));
+        if (m_storeView)
+            m_storeView->setSessionToken(QString());
         return;
     }
     const QString name = it->displayName.isEmpty() ? it->username : it->displayName;
@@ -531,6 +538,36 @@ void MainWindow::applyCurrentProfile()
     m_avatar->setPixmap(QPixmap());
     m_avatar->setText(name.left(1).toUpper());
     m_rankLabel->setText(QStringLiteral("MMR --"));
+    m_level->setText(QStringLiteral("Nivel --"));
+    if (m_storeView)
+        m_storeView->setSessionToken(it->token);
+}
+
+QString MainWindow::currentToken() const
+{
+    const auto &profiles = m_store.config().profiles;
+    const auto it = std::find_if(profiles.cbegin(), profiles.cend(),
+                                 [this](const Profile &profile) {
+                                     return profile.username == m_store.config().currentUsername;
+                                 });
+    return it == profiles.cend() ? QString() : it->token;
+}
+
+void MainWindow::showDashboard()
+{
+    if (!m_pageStack)
+        return;
+    m_pageStack->setCurrentIndex(0);
+    m_homeButton->setObjectName(QStringLiteral("NavButtonActive"));
+    m_storeButton->setObjectName(QStringLiteral("NavButton"));
+    for (auto *button : {m_homeButton, m_storeButton})
+    {
+        if (button && button->style())
+        {
+            button->style()->unpolish(button);
+            button->style()->polish(button);
+        }
+    }
 }
 
 void MainWindow::validateCurrentSession()
@@ -616,6 +653,9 @@ void MainWindow::logout()
     if (!previousToken.isEmpty())
         m_server.logout(previousToken);
     m_store.save();
+    if (m_storeView)
+        m_storeView->setSessionToken(QString());
+    showDashboard();
 
     // The dashboard is only usable while logged in: closing the session
     // requires logging back in, and cancelling closes the launcher. Hide it
@@ -697,23 +737,21 @@ void MainWindow::play()
 
 void MainWindow::openStore()
 {
-    const auto &profiles = m_store.config().profiles;
-    const auto it = std::find_if(profiles.cbegin(), profiles.cend(),
-                                 [this](const Profile &profile) {
-                                     return profile.username == m_store.config().currentUsername;
-                                 });
-    if (it == profiles.cend() || it->token.isEmpty())
+    const auto token = currentToken();
+    m_storeView->setSessionToken(token);
+    m_pageStack->setCurrentIndex(1);
+    m_homeButton->setObjectName(QStringLiteral("NavButton"));
+    m_storeButton->setObjectName(QStringLiteral("NavButtonActive"));
+    for (auto *button : {m_homeButton, m_storeButton})
     {
-        QMessageBox::information(
-            this,
-            QStringLiteral("Tienda"),
-            QStringLiteral("Inicia sesión antes de abrir la tienda."));
-        return;
+        if (button && button->style())
+        {
+            button->style()->unpolish(button);
+            button->style()->polish(button);
+        }
     }
-
-    m_storeButton->setEnabled(false);
-    m_statusBar->showMessage(QStringLiteral("Preparando acceso seguro a la tienda…"));
-    m_server.createStoreHandoff(it->token);
+    m_statusBar->showMessage(QStringLiteral("Tienda integrada abierta"));
+    m_storeView->reload();
 }
 
 void MainWindow::stop()

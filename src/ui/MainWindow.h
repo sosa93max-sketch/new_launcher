@@ -11,7 +11,9 @@ class QCheckBox;
 class QLabel;
 class QLineEdit;
 class QPushButton;
+class QStackedWidget;
 class QStatusBar;
+class StoreView;
 
 class MainWindow : public QMainWindow
 {
@@ -35,6 +37,8 @@ private:
     void buildDashboardUi();
     void applyCurrentProfile();
     void validateCurrentSession();
+    QString currentToken() const;
+    void showDashboard();
     void logout();
     void play();
     void openStore();
@@ -58,7 +62,10 @@ private:
     QCheckBox *m_novid = nullptr;
     QCheckBox *m_insecure = nullptr;
     QPushButton *m_playButton = nullptr;
+    QPushButton *m_homeButton = nullptr;
     QPushButton *m_storeButton = nullptr;
+    QStackedWidget *m_pageStack = nullptr;
+    StoreView *m_storeView = nullptr;
     QStatusBar *m_statusBar = nullptr;
 
     QTimer m_statusTimer;

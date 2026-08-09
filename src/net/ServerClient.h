@@ -4,11 +4,69 @@
 #include <QNetworkAccessManager>
 #include <QObject>
 #include <QString>
-#include <QUrl>
+#include <QVector>
 
 #include <cstdint>
 
 class QNetworkReply;
+
+struct StoreCatalogItemData
+{
+    quint32 productId = 0;
+    quint32 defIndex = 0;
+    QString name;
+    int productType = 0;
+    qint64 priceDollars = 0;
+    QString category;
+    QString description;
+    bool active = false;
+    quint32 ownedQuantity = 0;
+    qint64 marketLowestPriceCents = 0;
+    qint64 marketMedianPriceCents = 0;
+    QString marketPriceStatus;
+    QVector<QString> heroes;
+};
+
+struct StoreCatalogPageData
+{
+    QVector<StoreCatalogItemData> items;
+    int page = 1;
+    int pageSize = 24;
+    int totalCount = 0;
+    int activeCount = 0;
+    QVector<QString> categories;
+    QVector<QString> heroes;
+};
+
+struct StoreWalletData
+{
+    qint64 balanceDollars = 0;
+    qint64 reservedDollars = 0;
+    qint64 availableDollars = 0;
+};
+
+struct StoreInventoryItemData
+{
+    quint64 itemId = 0;
+    quint32 defIndex = 0;
+    quint32 quantity = 0;
+};
+
+struct StoreTransactionData
+{
+    QString reference;
+    qint64 amountDollars = 0;
+    QString createdAt;
+};
+
+struct StorePurchaseData
+{
+    bool success = false;
+    QString code;
+    QString message;
+    StoreWalletData wallet;
+    QVector<StoreInventoryItemData> items;
+};
 
 /// Talks to the D2ST server. The wire format is PascalCase JSON (the server
 /// serializes with PropertyNamingPolicy = null), so all keys below are exact.
@@ -43,12 +101,19 @@ public:
     /// server sees the account go offline before the process exits).
     void logout(const QString &token, bool waitForDelivery = false);
 
-    /// POST /api/store/handoff and return a short-lived same-origin store path.
-    /// The bearer token is never placed in the URL.
-    void createStoreHandoff(const QString &token);
-
-    /// Resolves a server-returned relative path against the configured base URL.
-    QUrl urlForPath(const QString &path) const;
+    /// Native launcher store API. All calls use the same bearer token returned
+    /// by the launcher login, so the embedded store never depends on cookies.
+    void fetchStoreCatalog(const QString &token,
+                           int page,
+                           int pageSize,
+                           const QString &search,
+                           const QString &category,
+                           const QString &hero,
+                           int type);
+    void fetchStoreWallet(const QString &token);
+    void fetchStoreInventory(const QString &token);
+    void fetchStoreTransactions(const QString &token, int limit = 8);
+    void purchaseStoreItem(const QString &token, quint32 productId, quint32 quantity = 1);
 
 signals:
     void pingFinished(bool reachable, const QString &version);
@@ -58,12 +123,26 @@ signals:
                     quint32 accountId, quint64 steamId, int playerLevel);
     void rankFinished(bool ok, int mmr, int rankTier, int rankStar);
     void avatarFinished(bool ok, const QByteArray &png);
-    void storeHandoffFinished(bool ok, const QString &error, const QString &path);
+    void storeCatalogFinished(bool ok, const QString &error,
+                              const StoreCatalogPageData &page);
+    void storeWalletFinished(bool ok, const QString &error,
+                             const StoreWalletData &wallet);
+    void storeInventoryFinished(bool ok, const QString &error,
+                                const QVector<StoreInventoryItemData> &items);
+    void storeTransactionsFinished(bool ok, const QString &error,
+                                   const QVector<StoreTransactionData> &items);
+    void storePurchaseFinished(bool ok, const QString &error,
+                               const StorePurchaseData &purchase);
 
 private:
-    QNetworkReply *postJson(const QString &path, const QJsonObject &body);
+    QNetworkReply *postJson(const QString &path,
+                            const QJsonObject &body,
+                            const QString &token = {});
     QNetworkReply *getJson(const QString &path, const QString &token);
-    static QString errorText(QNetworkReply *reply, const QString &fallback);
+    static bool isSuccessful(QNetworkReply *reply);
+    static QString errorText(QNetworkReply *reply,
+                             const QString &fallback,
+                             const QByteArray &body = {});
 
     QNetworkAccessManager m_nam;
     QString m_baseUrl;

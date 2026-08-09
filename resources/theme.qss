@@ -488,3 +488,350 @@ QLabel#FooterDot {
     color: #66e5e2;
     font-size: 15px;
 }
+
+/* ---------- Refined navigation and native store ---------- */
+QScrollArea#DashboardScroll, QScrollArea#StoreScroll {
+    background: transparent;
+    border: none;
+}
+
+QScrollArea#DashboardScroll QWidget#qt_scrollarea_viewport,
+QScrollArea#StoreScroll QWidget#qt_scrollarea_viewport {
+    background: transparent;
+}
+
+QPushButton#NavButton {
+    text-align: left;
+    color: #a4b8d2;
+    background: rgba(7, 17, 31, .18);
+    border: 1px solid transparent;
+    border-radius: 13px;
+    padding: 11px 14px;
+    font-weight: 800;
+    letter-spacing: .5px;
+}
+
+QPushButton#NavButton:hover {
+    color: #ffffff;
+    background: rgba(109, 181, 255, .13);
+    border-color: rgba(109, 181, 255, .18);
+}
+
+QPushButton#NavButtonActive {
+    min-height: 44px;
+    padding: 11px 14px;
+}
+
+QWidget#DashboardPage {
+    background: transparent;
+}
+
+QLabel#HeroTitle {
+    min-height: 48px;
+}
+
+QLineEdit#PathField {
+    min-height: 40px;
+}
+
+/* Store frame */
+QWidget#StorePage, QWidget#StoreBody {
+    background: transparent;
+}
+
+QLabel#StoreTitle {
+    color: #ffffff;
+    font-size: 25px;
+    font-weight: 900;
+    letter-spacing: 1.6px;
+}
+
+QLabel#StoreSubtitle, QLabel#StoreMuted {
+    color: #7f98b8;
+    font-size: 11px;
+}
+
+QPushButton#StoreBackButton {
+    color: #9db5d1;
+    background: rgba(13, 29, 49, .55);
+    border: 1px solid rgba(125, 175, 235, .18);
+    border-radius: 11px;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+QPushButton#StoreBackButton:hover {
+    color: #ffffff;
+    background: rgba(47, 81, 122, .76);
+    border-color: rgba(102, 229, 226, .42);
+}
+
+QFrame#StoreWalletCard {
+    background: rgba(16, 37, 61, .92);
+    border: 1px solid rgba(255, 200, 107, .26);
+    border-radius: 16px;
+}
+
+QLabel#StoreWalletIcon {
+    color: #101a28;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                stop:0 #ffd889, stop:1 #ff9b91);
+    border-radius: 11px;
+    font-size: 17px;
+    font-weight: 900;
+}
+
+QLabel#StoreOverline {
+    color: #66e5e2;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+}
+
+QLabel#StoreWalletValue {
+    color: #ffffff;
+    font-size: 21px;
+    font-weight: 900;
+}
+
+QFrame#StoreHeroCard {
+    min-height: 132px;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                stop:0 #19385d, stop:0.55 #132b4a, stop:1 #102039);
+    border: 1px solid rgba(109, 181, 255, .30);
+    border-radius: 20px;
+}
+
+QLabel#StoreHeroTitle {
+    color: #ffffff;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -.5px;
+}
+
+QLabel#StoreHeroText {
+    color: #acc3dd;
+    font-size: 13px;
+}
+
+QFrame#StoreHeroBadge {
+    min-width: 190px;
+    background: rgba(5, 14, 27, .42);
+    border: 1px solid rgba(102, 229, 226, .20);
+    border-radius: 14px;
+}
+
+QLabel#StoreBadgeTitle {
+    color: #f5f8ff;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 1.1px;
+}
+
+QFrame#StoreFilterCard {
+    background: rgba(9, 21, 36, .70);
+    border: 1px solid rgba(125, 175, 235, .18);
+    border-radius: 15px;
+}
+
+QLineEdit#StoreSearch, QComboBox#StoreFilter {
+    min-height: 38px;
+    background: rgba(4, 12, 24, .78);
+    border: 1px solid rgba(125, 175, 235, .22);
+    border-radius: 10px;
+    padding: 7px 10px;
+    color: #eaf3ff;
+}
+
+QLineEdit#StoreSearch:focus, QComboBox#StoreFilter:focus {
+    border-color: #66e5e2;
+}
+
+QComboBox#StoreFilter QAbstractItemView {
+    color: #eaf3ff;
+    background: #102039;
+    border: 1px solid #35577e;
+    selection-background-color: #1d5b88;
+}
+
+QPushButton#StoreSecondaryButton, QPushButton#StorePagerButton {
+    color: #b8cbe2;
+    background: rgba(26, 51, 79, .74);
+    border: 1px solid rgba(125, 175, 235, .24);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .7px;
+}
+
+QPushButton#StoreSecondaryButton:hover, QPushButton#StorePagerButton:hover {
+    color: #ffffff;
+    background: #28537d;
+    border-color: #66e5e2;
+}
+
+QLabel#StoreSectionTitle {
+    color: #9fc0e2;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 1.4px;
+}
+
+QLabel#StoreInfo, QLabel#StoreError, QLabel#StoreSuccess {
+    border-radius: 9px;
+    padding: 8px 11px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+QLabel#StoreInfo {
+    color: #9dbce0;
+    background: rgba(109, 181, 255, .09);
+    border: 1px solid rgba(109, 181, 255, .18);
+}
+
+QLabel#StoreError {
+    color: #ffc0c8;
+    background: rgba(255, 126, 139, .10);
+    border: 1px solid rgba(255, 126, 139, .26);
+}
+
+QLabel#StoreSuccess {
+    color: #a7f1df;
+    background: rgba(102, 229, 226, .09);
+    border: 1px solid rgba(102, 229, 226, .22);
+}
+
+QFrame#StoreProductCard {
+    min-width: 210px;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #142b49, stop:1 #0d1c31);
+    border: 1px solid rgba(125, 175, 235, .20);
+    border-radius: 17px;
+}
+
+QFrame#StoreProductCard:hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #1b3b61, stop:1 #102641);
+    border-color: rgba(102, 229, 226, .48);
+}
+
+QLabel#StoreProductBadge, QLabel#StoreOwnedBadge {
+    border-radius: 7px;
+    padding: 4px 7px;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .6px;
+}
+
+QLabel#StoreProductBadge {
+    color: #091522;
+    background: #72d9d2;
+}
+
+QLabel#StoreOwnedBadge {
+    color: #9eb8d6;
+    background: rgba(109, 181, 255, .10);
+    border: 1px solid rgba(109, 181, 255, .19);
+}
+
+QLabel#StoreProductName {
+    color: #f6f9ff;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+QLabel#StoreProductDescription {
+    color: #8ea8c5;
+    font-size: 11px;
+}
+
+QLabel#StoreProductHero {
+    color: #77c6ff;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+QLabel#StoreProductPrice {
+    color: #ffc86b;
+    font-size: 20px;
+    font-weight: 900;
+}
+
+QLabel#StoreProductPriceMeta {
+    color: #89a5c6;
+    font-size: 10px;
+}
+
+QPushButton#StoreBuyButton {
+    min-height: 35px;
+    color: #081321;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 #66e5e2, stop:1 #6db5ff);
+    border: none;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .6px;
+}
+
+QPushButton#StoreBuyButton:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 #8af3e9, stop:1 #8ec5ff);
+}
+
+QPushButton#StoreBuyButton:disabled {
+    color: #6d86a2;
+    background: #17283c;
+    border: 1px solid rgba(125, 175, 235, .12);
+}
+
+QFrame#StorePanel {
+    min-height: 150px;
+    background: rgba(13, 28, 48, .76);
+    border: 1px solid rgba(125, 175, 235, .18);
+    border-radius: 16px;
+}
+
+QFrame#StoreListRow {
+    background: rgba(5, 14, 27, .35);
+    border: 1px solid rgba(125, 175, 235, .11);
+    border-radius: 8px;
+}
+
+QLabel#StoreListPrimary {
+    color: #d8e8fa;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+QLabel#StoreListAccent {
+    color: #66e5e2;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+QLabel#StorePageLabel {
+    min-width: 46px;
+    color: #9bb3d0;
+    font-size: 11px;
+    font-weight: 800;
+    qproperty-alignment: AlignCenter;
+}
+
+QFrame#StoreEmptyState, QFrame#StoreSessionGate {
+    min-height: 170px;
+    background: rgba(13, 28, 48, .56);
+    border: 1px dashed rgba(125, 175, 235, .26);
+    border-radius: 17px;
+}
+
+QLabel#StoreEmptyTitle {
+    color: #e8f2ff;
+    font-size: 18px;
+    font-weight: 800;
+    qproperty-alignment: AlignCenter;
+}

@@ -18,9 +18,10 @@ Inspirado en el launcher WPF de SKYNET escrito en **Qt 6 / C++** (Widgets + Netw
   la cabecera y no como un marcador `--`.
 - **Dashboard moderno**: tarjetas con gradientes, sombras, status pills y
   acciones compactas; no incluye un botón innecesario de `Agregar cuenta`.
-- **Tienda web sin segundo login**: el botón `TIENDA` solicita un código
-  temporal al servidor y abre `/store` en el navegador; la cuenta es siempre el
-  perfil activo y el token permanente no se expone en la URL.
+- **Tienda nativa sin segundo login**: el botón `TIENDA` cambia a una vista Qt
+  integrada con catálogo, filtros, saldo, inventario, actividad y compra. Usa
+  directamente el bearer token del perfil activo; no abre navegador ni usa
+  cookies.
 - **Perfil de la cuenta activa**: nombre, AccountId, SteamId y nivel desde
   `GET /api/users/me`.
 - **Detección de Dota 2**: valida el path guardado, acepta raíz de Dota/Steam o
@@ -74,9 +75,9 @@ El ejecutable queda en `build/Release/D2MaxLauncher.exe`. Copia
 src/
   main.cpp
   config/    AppConfig + ConfigStore (config.json en %APPDATA%\D2MaxLauncher)
-  net/       ServerClient (login, version, me, store handoff — JSON PascalCase)
+  net/       ServerClient (login, version, me y tienda nativa — JSON PascalCase)
   launch/    GameLauncher, DllInjector, PeUtils, IniGenerator, DotaPathDetector
-  ui/        LoginDialog + MainWindow (tema oscuro QSS)
+  ui/        LoginDialog + MainWindow + StoreView (tema oscuro QSS)
   util/      Log
 resources/   theme.qss
 ```
