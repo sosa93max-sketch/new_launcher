@@ -2,7 +2,6 @@
 
 #include <QColor>
 #include <QFrame>
-#include <QStyle>
 #include <QFont>
 #include <QGraphicsDropShadowEffect>
 #include <QHBoxLayout>
@@ -14,7 +13,7 @@
 #include <QPixmap>
 #include <QPushButton>
 #include <QScrollArea>
-#include <QStringList>
+#include <QStyle>
 #include <QVBoxLayout>
 
 #include <algorithm>
@@ -24,19 +23,10 @@ namespace
 QString medalName(int tier)
 {
     static const QStringList names = {
-        QStringLiteral("Heraldo"), QStringLiteral("Guardián"), QStringLiteral("Cruzado"),
-        QStringLiteral("Arconte"), QStringLiteral("Leyenda"), QStringLiteral("Antiguo"),
-        QStringLiteral("Divino"), QStringLiteral("Inmortal")};
-    return (tier >= 1 && tier <= names.size())
-        ? names.at(tier - 1)
-        : QStringLiteral("Sin calibrar");
-}
-
-QString stars(int count)
-{
-    if (count <= 0)
-        return QStringLiteral("Rango máximo");
-    return QString(count, QChar(0x2605));
+        QStringLiteral("Sin calibrar"), QStringLiteral("Heraldo"), QStringLiteral("Guardián"),
+        QStringLiteral("Cruzado"), QStringLiteral("Arconte"), QStringLiteral("Leyenda"),
+        QStringLiteral("Antiguo"), QStringLiteral("Divino"), QStringLiteral("Inmortal")};
+    return (tier >= 0 && tier < names.size()) ? names.at(tier) : names.at(0);
 }
 
 void addShadow(QWidget *widget)
@@ -48,12 +38,20 @@ void addShadow(QWidget *widget)
     widget->setGraphicsEffect(effect);
 }
 
-/// The official Dota 2 medal source is the VPK path
-/// panorama/images/rank_tier_icons/rank{0..8}_psd.vtex_c. Those compiled
-/// assets cannot be read by Qt directly, so the launcher renders a compact
-/// local vector badge with the same tier identity and does not depend on an
-/// external web session or CDN at runtime.
-QPixmap medalIcon(int tier, int star, int size)
+/// Intenta cargar la medalla real desde recursos (:/icons/rank/rank_N.png).
+/// Si no existe, devuelve un pixmap nulo y la UI usa el fallback vectorial.
+QPixmap realMedalPixmap(int tier, int size)
+{
+    if (tier < 1 || tier > 8)
+        return QPixmap();
+    QPixmap pm(QStringLiteral(":/icons/rank/rank_%1.png").arg(tier));
+    if (!pm.isNull())
+        return pm.scaled(size, size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    return QPixmap();
+}
+
+/// Fallback vectorial cuando no hay PNGs de medallas reales.
+QPixmap medalIconFallback(int tier, int size)
 {
     static const QVector<QColor> colors = {
         QColor(QStringLiteral("#64748b")), QColor(QStringLiteral("#a16207")),
@@ -99,20 +97,6 @@ QPixmap medalIcon(int tier, int star, int size)
     painter.drawText(QRectF(0, size * 0.27, size, size * 0.34),
                      Qt::AlignCenter,
                      safeTier == 0 ? QStringLiteral("?") : QString::number(safeTier));
-
-    if (star > 0)
-    {
-        painter.setBrush(QColor(255, 255, 255, 230));
-        painter.setPen(Qt::NoPen);
-        const int visibleStars = std::min(star, 5);
-        const qreal gap = size * 0.105;
-        const qreal start = size * 0.50 - (visibleStars - 1) * gap / 2.0;
-        for (int index = 0; index < visibleStars; ++index)
-            painter.drawEllipse(QPointF(start + index * gap, size * 0.80),
-                                std::max<qreal>(1.2, size * 0.026),
-                                std::max<qreal>(1.2, size * 0.026));
-    }
-
     return result;
 }
 }
@@ -142,7 +126,7 @@ RankingView::RankingView(ServerClient &server, QWidget *parent)
                 m_totalCount = page.totalCount;
                 m_hasLoaded = true;
                 m_countLabel->setText(m_totalCount == 0
-                                           ? QStringLiteral("Sin jugadores clasificados")
+                                           ? QStringLiteral("Sin jugadores")
                                            : QStringLiteral("%1 jugadores").arg(m_totalCount));
                 setBusy(false);
                 renderRanking();
@@ -193,46 +177,35 @@ void RankingView::buildUi()
     bodyLayout->setContentsMargins(0, 0, 4, 12);
     bodyLayout->setSpacing(10);
 
+    // Hero compacto, sin card derecha informativa
     auto *hero = new QFrame(body);
     hero->setObjectName(QStringLiteral("RankingHeroCard"));
     addShadow(hero);
     auto *heroLayout = new QHBoxLayout(hero);
-    heroLayout->setContentsMargins(18, 14, 18, 14);
-    heroLayout->setSpacing(14);
+    heroLayout->setContentsMargins(16, 12, 16, 12);
+    heroLayout->setSpacing(12);
     auto *heroCopy = new QVBoxLayout;
-    heroCopy->setSpacing(3);
+    heroCopy->setSpacing(2);
     auto *heroOverline = new QLabel(QStringLiteral("D2MAX · COMPETITIVO"), hero);
     heroOverline->setObjectName(QStringLiteral("RankingOverline"));
-    auto *heroTitle = new QLabel(QStringLiteral("Sube en la clasificación."), hero);
+    auto *heroTitle = new QLabel(QStringLiteral("Clasificación global"), hero);
     heroTitle->setObjectName(QStringLiteral("RankingHeroTitle"));
-    auto *heroText = new QLabel(QStringLiteral("Consulta el MMR, la medalla y el rendimiento básico de cada jugador del servidor."), hero);
+    auto *heroText = new QLabel(QStringLiteral("MMR, medallas y rendimiento de los jugadores del servidor."), hero);
     heroText->setObjectName(QStringLiteral("RankingHeroText"));
     heroText->setWordWrap(true);
     heroCopy->addWidget(heroOverline);
     heroCopy->addWidget(heroTitle);
     heroCopy->addWidget(heroText);
     heroLayout->addLayout(heroCopy, 1);
-
-    auto *heroBadge = new QFrame(hero);
-    heroBadge->setObjectName(QStringLiteral("RankingHeroBadge"));
-    auto *heroBadgeLayout = new QVBoxLayout(heroBadge);
-    heroBadgeLayout->setContentsMargins(12, 10, 12, 10);
-    auto *badgeTitle = new QLabel(QStringLiteral("MEDALLAS DOTA 2"), heroBadge);
-    badgeTitle->setObjectName(QStringLiteral("RankingBadgeTitle"));
-    auto *badgeText = new QLabel(QStringLiteral("Iconos locales por medalla"), heroBadge);
-    badgeText->setObjectName(QStringLiteral("RankingMuted"));
-    badgeText->setWordWrap(true);
-    heroBadgeLayout->addWidget(badgeTitle);
-    heroBadgeLayout->addWidget(badgeText);
-    heroLayout->addWidget(heroBadge);
     bodyLayout->addWidget(hero);
 
+    // Toolbar
     auto *toolbar = new QFrame(body);
     toolbar->setObjectName(QStringLiteral("RankingToolbar"));
     auto *toolbarLayout = new QHBoxLayout(toolbar);
-    toolbarLayout->setContentsMargins(12, 8, 12, 8);
+    toolbarLayout->setContentsMargins(0, 4, 0, 4);
     toolbarLayout->setSpacing(8);
-    auto *toolbarTitle = new QLabel(QStringLiteral("RANKING GLOBAL"), toolbar);
+    auto *toolbarTitle = new QLabel(QStringLiteral("RANKING"), toolbar);
     toolbarTitle->setObjectName(QStringLiteral("RankingSectionTitle"));
     m_countLabel = new QLabel(QStringLiteral("Cargando…"), toolbar);
     m_countLabel->setObjectName(QStringLiteral("RankingMuted"));
@@ -259,7 +232,7 @@ void RankingView::buildUi()
     root->addWidget(scroll, 1);
 
     renderSessionGate(QStringLiteral("Ranking listo"),
-                      QStringLiteral("Inicia sesión en el launcher para consultar la clasificación."));
+                      QStringLiteral("Inicia sesión para consultar la clasificación."));
 }
 
 void RankingView::setSessionToken(const QString &token)
@@ -278,9 +251,9 @@ void RankingView::setSessionToken(const QString &token)
     setBusy(false);
     if (m_token.isEmpty())
     {
-        m_countLabel->setText(QStringLiteral("Sesión no iniciada"));
+        m_countLabel->setText(QStringLiteral("—"));
         renderSessionGate(QStringLiteral("Sesión requerida"),
-                          QStringLiteral("Inicia sesión en el launcher para acceder al ranking."));
+                          QStringLiteral("Inicia sesión para acceder al ranking."));
         return;
     }
 
@@ -296,9 +269,9 @@ void RankingView::reload()
     if (m_token.isEmpty())
     {
         setBusy(false);
-        m_countLabel->setText(QStringLiteral("Sesión no iniciada"));
+        m_countLabel->setText(QStringLiteral("—"));
         renderSessionGate(QStringLiteral("Sesión requerida"),
-                          QStringLiteral("Inicia sesión en el launcher para acceder al ranking."));
+                          QStringLiteral("Inicia sesión para acceder al ranking."));
         return;
     }
 
@@ -335,12 +308,12 @@ void RankingView::renderLoadingState()
     auto *loading = new QFrame(m_listHost);
     loading->setObjectName(QStringLiteral("RankingLoadingState"));
     auto *layout = new QVBoxLayout(loading);
-    layout->setContentsMargins(20, 24, 20, 24);
-    layout->setSpacing(6);
-    auto *title = new QLabel(QStringLiteral("Cargando ranking…"), loading);
+    layout->setContentsMargins(16, 20, 16, 20);
+    layout->setSpacing(4);
+    auto *title = new QLabel(QStringLiteral("Cargando…"), loading);
     title->setObjectName(QStringLiteral("RankingEmptyTitle"));
     title->setAlignment(Qt::AlignCenter);
-    auto *copy = new QLabel(QStringLiteral("Estamos consultando el MMR y las medallas del servidor."), loading);
+    auto *copy = new QLabel(QStringLiteral("Consultando MMR y medallas del servidor."), loading);
     copy->setObjectName(QStringLiteral("RankingMuted"));
     copy->setAlignment(Qt::AlignCenter);
     copy->setWordWrap(true);
@@ -355,19 +328,15 @@ void RankingView::renderEmptyState()
     auto *empty = new QFrame(m_listHost);
     empty->setObjectName(QStringLiteral("RankingEmptyState"));
     auto *layout = new QVBoxLayout(empty);
-    layout->setContentsMargins(20, 24, 20, 24);
-    layout->setSpacing(6);
-    auto *icon = new QLabel(QStringLiteral("✦"), empty);
-    icon->setObjectName(QStringLiteral("RankingEmptyIcon"));
-    icon->setAlignment(Qt::AlignCenter);
-    auto *title = new QLabel(QStringLiteral("Aún no hay jugadores clasificados"), empty);
+    layout->setContentsMargins(16, 20, 16, 20);
+    layout->setSpacing(4);
+    auto *title = new QLabel(QStringLiteral("Sin jugadores clasificados"), empty);
     title->setObjectName(QStringLiteral("RankingEmptyTitle"));
     title->setAlignment(Qt::AlignCenter);
-    auto *copy = new QLabel(QStringLiteral("El ranking aparecerá cuando una cuenta complete una partida calibrada o reciba MMR."), empty);
+    auto *copy = new QLabel(QStringLiteral("Aparecerá cuando alguien complete una partida calibrada."), empty);
     copy->setObjectName(QStringLiteral("RankingMuted"));
     copy->setWordWrap(true);
     copy->setAlignment(Qt::AlignCenter);
-    layout->addWidget(icon);
     layout->addWidget(title);
     layout->addWidget(copy);
     m_listLayout->addWidget(empty);
@@ -380,69 +349,49 @@ QWidget *RankingView::createRankingRow(const RankingEntryData &entry)
     auto *row = new QFrame(m_listHost);
     row->setObjectName(QStringLiteral("RankingRow"));
     auto *layout = new QHBoxLayout(row);
-    layout->setContentsMargins(12, 8, 12, 8);
+    layout->setContentsMargins(10, 6, 10, 6);
     layout->setSpacing(10);
 
-    auto *position = new QLabel(QStringLiteral("#%1").arg(entry.position), row);
-    position->setObjectName(QStringLiteral("RankingPosition"));
-    position->setFixedWidth(38);
-    position->setAlignment(Qt::AlignCenter);
-    layout->addWidget(position);
+    // Posición
+    auto *pos = new QLabel(QStringLiteral("#%1").arg(entry.position), row);
+    pos->setObjectName(QStringLiteral("RankingPosition"));
+    pos->setFixedWidth(36);
+    pos->setAlignment(Qt::AlignCenter);
+    layout->addWidget(pos);
 
-    auto *icon = new QLabel(row);
-    icon->setObjectName(QStringLiteral("RankingMedalIcon"));
-    icon->setFixedSize(48, 48);
-    icon->setAlignment(Qt::AlignCenter);
-    icon->setPixmap(medalIcon(entry.rankTier, entry.rankStar, 44));
-    layout->addWidget(icon);
+    // Medalla (real si existe, si no fallback vectorial)
+    auto *medal = new QLabel(row);
+    medal->setFixedSize(36, 36);
+    medal->setScaledContents(false);
+    QPixmap pm = realMedalPixmap(entry.rankTier, 36);
+    if (pm.isNull())
+        pm = medalIconFallback(entry.rankTier, 36);
+    medal->setPixmap(pm);
+    medal->setToolTip(medalName(entry.rankTier));
+    layout->addWidget(medal);
 
-    auto *identity = new QVBoxLayout;
-    identity->setSpacing(2);
+    // Info central compacta
+    auto *info = new QVBoxLayout;
+    info->setSpacing(1);
     auto *name = new QLabel(entry.personaName.isEmpty() ? entry.username : entry.personaName, row);
     name->setObjectName(QStringLiteral("RankingPlayerName"));
     name->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    auto *handle = new QLabel(entry.username == entry.personaName || entry.personaName.isEmpty()
-                                   ? QStringLiteral("Cuenta D2MAX")
-                                   : QStringLiteral("@%1").arg(entry.username), row);
-    handle->setObjectName(QStringLiteral("RankingPlayerHandle"));
-    auto *presence = new QLabel(entry.online ? QStringLiteral("● EN LÍNEA") : QStringLiteral("○ DESCONECTADO"), row);
-    presence->setObjectName(entry.online
-                                ? QStringLiteral("RankingOnline")
-                                : QStringLiteral("RankingOffline"));
-    identity->addWidget(name);
-    identity->addWidget(handle);
-    identity->addWidget(presence);
-    layout->addLayout(identity, 1);
 
-    auto *medal = new QVBoxLayout;
-    medal->setSpacing(1);
-    auto *medalLabel = new QLabel(medalName(entry.rankTier), row);
-    medalLabel->setObjectName(QStringLiteral("RankingMedalName"));
-    auto *starLabel = new QLabel(stars(entry.rankStar), row);
-    starLabel->setObjectName(QStringLiteral("RankingStars"));
-    medal->addWidget(medalLabel, 0, Qt::AlignRight);
-    medal->addWidget(starLabel, 0, Qt::AlignRight);
-    layout->addLayout(medal);
+    QString meta = QStringLiteral("MMR %1  ·  %2% WR  ·  %3 partidas")
+                       .arg(entry.mmr)
+                       .arg(entry.winRatePercent)
+                       .arg(entry.games);
+    auto *metaLbl = new QLabel(meta, row);
+    metaLbl->setObjectName(QStringLiteral("RankingPlayerMeta"));
+    info->addWidget(name);
+    info->addWidget(metaLbl);
+    layout->addLayout(info, 1);
 
-    auto *mmr = new QVBoxLayout;
-    mmr->setSpacing(1);
-    auto *mmrValue = new QLabel(QStringLiteral("%1").arg(entry.mmr), row);
-    mmrValue->setObjectName(QStringLiteral("RankingMmr"));
-    auto *mmrLabel = new QLabel(QStringLiteral("MMR"), row);
-    mmrLabel->setObjectName(QStringLiteral("RankingMetricLabel"));
-    mmr->addWidget(mmrValue, 0, Qt::AlignRight);
-    mmr->addWidget(mmrLabel, 0, Qt::AlignRight);
-    layout->addLayout(mmr);
-
-    auto *stats = new QLabel(QStringLiteral("%1 partidas · %2 V · %3 D\n%4% WR")
-                                 .arg(entry.games)
-                                 .arg(entry.wins)
-                                 .arg(entry.losses)
-                                 .arg(entry.winRatePercent), row);
-    stats->setObjectName(QStringLiteral("RankingStats"));
-    stats->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    stats->setMinimumWidth(145);
-    layout->addWidget(stats);
+    // Estado online (dot)
+    auto *dot = new QLabel(entry.online ? QStringLiteral("●") : QStringLiteral("○"), row);
+    dot->setObjectName(entry.online ? QStringLiteral("RankingOnlineDot") : QStringLiteral("RankingOfflineDot"));
+    dot->setToolTip(entry.online ? QStringLiteral("En línea") : QStringLiteral("Desconectado"));
+    layout->addWidget(dot);
 
     return row;
 }
@@ -453,8 +402,8 @@ void RankingView::renderSessionGate(const QString &title, const QString &message
     auto *gate = new QFrame(m_listHost);
     gate->setObjectName(QStringLiteral("RankingSessionGate"));
     auto *layout = new QVBoxLayout(gate);
-    layout->setContentsMargins(20, 24, 20, 24);
-    layout->setSpacing(6);
+    layout->setContentsMargins(16, 20, 16, 20);
+    layout->setSpacing(4);
     auto *heading = new QLabel(title, gate);
     heading->setObjectName(QStringLiteral("RankingEmptyTitle"));
     heading->setAlignment(Qt::AlignCenter);
@@ -464,7 +413,7 @@ void RankingView::renderSessionGate(const QString &title, const QString &message
     copy->setAlignment(Qt::AlignCenter);
     auto *login = new QPushButton(QStringLiteral("INICIAR SESIÓN"), gate);
     login->setObjectName(QStringLiteral("RankingLoginButton"));
-    login->setMinimumWidth(150);
+    login->setMinimumWidth(140);
     connect(login, &QPushButton::clicked, this, &RankingView::loginRequested);
     layout->addWidget(heading);
     layout->addWidget(copy);
