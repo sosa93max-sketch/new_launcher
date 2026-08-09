@@ -6,12 +6,18 @@ QWidget {
 }
 
 QMainWindow, QDialog {
-    background-color: #0d1117;
+    background-color: #070d17;
+}
+
+QWidget#LauncherRoot {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                stop:0 #091321, stop:0.48 #0d1828, stop:1 #08111d);
 }
 
 QLabel#TitleLabel {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 2px;
     color: #ffffff;
 }
 
@@ -27,13 +33,30 @@ QLabel#SectionLabel {
     letter-spacing: 1px;
 }
 
-QLabel#StatusOnline {
-    color: #3fb950;
+QLabel#StatusOffline {
+    color: #ff8793;
+    background-color: rgba(255, 87, 106, 0.10);
+    border: 1px solid rgba(255, 135, 147, 0.30);
+    border-radius: 12px;
+    padding: 6px 11px;
     font-weight: 700;
 }
 
-QLabel#StatusOffline {
-    color: #f85149;
+QLabel#StatusChecking {
+    color: #b7c6da;
+    background-color: rgba(142, 164, 194, 0.10);
+    border: 1px solid rgba(142, 164, 194, 0.22);
+    border-radius: 12px;
+    padding: 6px 11px;
+    font-weight: 700;
+}
+
+QLabel#StatusOnline {
+    color: #6ce5c2;
+    background-color: rgba(108, 229, 194, 0.10);
+    border: 1px solid rgba(108, 229, 194, 0.28);
+    border-radius: 12px;
+    padding: 6px 11px;
     font-weight: 700;
 }
 
@@ -42,10 +65,10 @@ QLabel#ErrorLabel {
 }
 
 QLineEdit, QComboBox, QSpinBox {
-    background-color: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 6px;
-    padding: 6px 8px;
+    background-color: rgba(5, 13, 25, 0.72);
+    border: 1px solid #263a55;
+    border-radius: 10px;
+    padding: 8px 10px;
     selection-background-color: #1f6feb;
 }
 
@@ -62,15 +85,16 @@ QLineEdit[echoMode="2"] {
 }
 
 QPushButton {
-    background-color: #21262d;
-    border: 1px solid #30363d;
-    border-radius: 6px;
-    padding: 7px 16px;
+    background-color: rgba(24, 43, 68, 0.82);
+    border: 1px solid #2b4565;
+    border-radius: 10px;
+    padding: 9px 17px;
     font-weight: 600;
 }
 
 QPushButton:hover {
-    background-color: #30363d;
+    background-color: #234469;
+    border-color: #4a80b4;
 }
 
 QPushButton:pressed {
@@ -83,14 +107,18 @@ QPushButton:disabled {
 }
 
 QPushButton#AccentButton {
-    background-color: #1f6feb;
-    border: 1px solid #1f6feb;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                stop:0 #5fe0d5, stop:1 #4e91ff);
+    border: 1px solid #68dcd6;
     color: #ffffff;
     font-size: 15px;
+    border-radius: 11px;
+    padding: 10px 22px;
 }
 
 QPushButton#AccentButton:hover {
-    background-color: #388bfd;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                stop:0 #76eee1, stop:1 #6ba8ff);
 }
 
 QPushButton#DangerButton {
@@ -110,18 +138,29 @@ QPushButton#GhostButton:hover {
 }
 
 QGroupBox {
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    margin-top: 14px;
-    padding-top: 10px;
+    border: 1px solid #303f59;
+    border-radius: 16px;
+    margin-top: 16px;
+    padding: 18px 12px 12px 12px;
     font-weight: 700;
-    color: #8b949e;
+    color: #9eb5d0;
 }
 
 QGroupBox::title {
     subcontrol-origin: margin;
     left: 12px;
     padding: 0 4px;
+}
+
+QGroupBox#PanelCard {
+    background-color: rgba(15, 31, 51, 0.76);
+    border: 1px solid rgba(106, 155, 207, 0.24);
+}
+
+QGroupBox#PanelCard::title {
+    color: #78c8ff;
+    letter-spacing: 1px;
+    padding: 0 8px;
 }
 
 QCheckBox {
@@ -147,8 +186,9 @@ QCheckBox::indicator:checked {
 }
 
 QStatusBar {
-    background-color: #161b22;
-    color: #8b949e;
+    background-color: rgba(6, 14, 25, 0.92);
+    color: #91a8c4;
+    border-top: 1px solid rgba(106, 155, 207, 0.18);
 }
 
 QListWidget {

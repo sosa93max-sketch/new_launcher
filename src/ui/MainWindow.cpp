@@ -12,6 +12,7 @@
 #include <QDateTime>
 #include <QDesktopServices>
 #include <QFileDialog>
+#include <QGraphicsDropShadowEffect>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -23,6 +24,7 @@
 #include <QPushButton>
 #include <QStringList>
 #include <QStatusBar>
+#include <QStyle>
 #include <QVBoxLayout>
 
 #include <algorithm>
@@ -55,6 +57,15 @@ QPixmap circularAvatar(const QByteArray &png, int size)
     painter.drawPixmap(-(source.width() - size) / 2, -(source.height() - size) / 2, source);
     return result;
 }
+
+void addCardShadow(QWidget *card)
+{
+    auto *shadow = new QGraphicsDropShadowEffect(card);
+    shadow->setBlurRadius(30);
+    shadow->setOffset(0, 8);
+    shadow->setColor(QColor(0, 0, 0, 115));
+    card->setGraphicsEffect(shadow);
+}
 }
 
 MainWindow::MainWindow(ConfigStore &store, ServerClient &server, QWidget *parent)
@@ -63,7 +74,8 @@ MainWindow::MainWindow(ConfigStore &store, ServerClient &server, QWidget *parent
     , m_server(server)
 {
     setWindowTitle(QStringLiteral("D2Max Launcher"));
-    resize(860, 620);
+    resize(1040, 700);
+    setMinimumSize(900, 620);
     buildUi();
 
     applyCurrentProfile();
@@ -83,19 +95,18 @@ MainWindow::MainWindow(ConfigStore &store, ServerClient &server, QWidget *parent
 void MainWindow::buildUi()
 {
     auto *central = new QWidget(this);
+    central->setObjectName(QStringLiteral("LauncherRoot"));
     auto *layout = new QVBoxLayout(central);
-    layout->setContentsMargins(24, 20, 24, 14);
-    layout->setSpacing(12);
+    layout->setContentsMargins(30, 24, 30, 14);
+    layout->setSpacing(16);
 
     // ---- header ----
     auto *header = new QHBoxLayout;
     auto *title = new QLabel(QStringLiteral("D2MAX LAUNCHER"), central);
     title->setObjectName(QStringLiteral("TitleLabel"));
-    m_statusLabel = new QLabel(QStringLiteral("--"), central);
-    m_statusLabel->setObjectName(QStringLiteral("SubtitleLabel"));
-    auto *addButton = new QPushButton(QStringLiteral("+ AGREGAR CUENTA"), central);
-    addButton->setObjectName(QStringLiteral("GhostButton"));
-    auto *logoutButton = new QPushButton(QStringLiteral("CERRAR SESIÓN"), central);
+    m_statusLabel = new QLabel(QStringLiteral("● COMPROBANDO SERVIDOR"), central);
+    m_statusLabel->setObjectName(QStringLiteral("StatusChecking"));
+    auto *logoutButton = new QPushButton(QStringLiteral("SALIR"), central);
     logoutButton->setObjectName(QStringLiteral("GhostButton"));
     m_storeButton = new QPushButton(QStringLiteral("TIENDA"), central);
     m_storeButton->setObjectName(QStringLiteral("AccentButton"));
@@ -103,12 +114,13 @@ void MainWindow::buildUi()
     header->addStretch();
     header->addWidget(m_statusLabel);
     header->addWidget(m_storeButton);
-    header->addWidget(addButton);
     header->addWidget(logoutButton);
     layout->addLayout(header);
 
     // ---- account card ----
     auto *accountBox = new QGroupBox(QStringLiteral("CUENTA"), central);
+    accountBox->setObjectName(QStringLiteral("PanelCard"));
+    addCardShadow(accountBox);
     auto *accountLayout = new QVBoxLayout(accountBox);
     auto *accountRow = new QHBoxLayout;
 
@@ -145,6 +157,8 @@ void MainWindow::buildUi()
 
     // ---- dota path ----
     auto *gameBox = new QGroupBox(QStringLiteral("DOTA 2"), central);
+    gameBox->setObjectName(QStringLiteral("PanelCard"));
+    addCardShadow(gameBox);
     auto *gameLayout = new QVBoxLayout(gameBox);
     auto *pathRow = new QHBoxLayout;
     m_dotaPath = new QLineEdit(m_store.config().dota2Path, gameBox);
@@ -174,6 +188,8 @@ void MainWindow::buildUi()
 
     // ---- server ----
     auto *serverBox = new QGroupBox(QStringLiteral("SERVIDOR D2"), central);
+    serverBox->setObjectName(QStringLiteral("PanelCard"));
+    addCardShadow(serverBox);
     auto *serverLayout = new QHBoxLayout(serverBox);
     m_serverUrl = new QLineEdit(m_store.config().serverUrl, serverBox);
     auto *applyServerButton = new QPushButton(QStringLiteral("APLICAR"), serverBox);
@@ -194,7 +210,6 @@ void MainWindow::buildUi()
     m_statusBar->showMessage(QStringLiteral("Listo"));
 
     // ---- connections ----
-    connect(addButton, &QPushButton::clicked, this, &MainWindow::addAccount);
     connect(m_storeButton, &QPushButton::clicked, this, &MainWindow::openStore);
     connect(logoutButton, &QPushButton::clicked, this, &MainWindow::logout);
     connect(browseButton, &QPushButton::clicked, this, [this]() {
@@ -202,15 +217,22 @@ void MainWindow::buildUi()
             this, QStringLiteral("Selecciona dota2.exe"),
             m_dotaPath->text(),
             QStringLiteral("Dota 2 executable (dota2.exe);;All files (*.*)"));
-        if (!path.isEmpty())
+        if (DotaPathDetector::isValid(path))
             m_dotaPath->setText(path);
+        else if (!path.isEmpty())
+            m_statusBar->showMessage(QStringLiteral("El archivo seleccionado no es un dota2.exe válido"));
     });
     connect(detectButton, &QPushButton::clicked, this, [this]() {
-        const QString path = DotaPathDetector::detect();
+        const QString path = DotaPathDetector::detect(m_dotaPath->text());
         if (!path.isEmpty())
+        {
             m_dotaPath->setText(path);
+            m_store.config().dota2Path = path;
+            m_store.save();
+            m_statusBar->showMessage(QStringLiteral("Dota 2 detectado automáticamente"));
+        }
         else
-            m_statusBar->showMessage(QStringLiteral("No se encontró Dota 2 automáticamente"));
+            m_statusBar->showMessage(QStringLiteral("No se encontró dota2.exe; selecciona la carpeta o el ejecutable"));
     });
     connect(applyServerButton, &QPushButton::clicked, this, [this]() {
         m_store.config().serverUrl = m_serverUrl->text().trimmed();
@@ -219,6 +241,23 @@ void MainWindow::buildUi()
         refreshStatus();
     });
     connect(m_playButton, &QPushButton::clicked, this, &MainWindow::play);
+
+    connect(&m_server, &ServerClient::pingFinished, this,
+            [this](bool reachable, const QString &version) {
+                m_statusLabel->setObjectName(reachable
+                    ? QStringLiteral("StatusOnline")
+                    : QStringLiteral("StatusOffline"));
+                m_statusLabel->setText(reachable
+                    ? (version.isEmpty()
+                        ? QStringLiteral("● SERVIDOR EN LÍNEA")
+                        : QStringLiteral("● EN LÍNEA · %1").arg(version))
+                    : QStringLiteral("● SERVIDOR SIN RESPUESTA"));
+                if (m_statusLabel->style())
+                {
+                    m_statusLabel->style()->unpolish(m_statusLabel);
+                    m_statusLabel->style()->polish(m_statusLabel);
+                }
+            });
 
     connect(&m_server, &ServerClient::meFinished, this,
             [this](bool ok, const QString &, const QString &personaName,
@@ -306,6 +345,15 @@ void MainWindow::buildUi()
                 if (m_storeButton)
                     m_storeButton->setEnabled(true);
             });
+
+    const auto detectedPath = DotaPathDetector::detect(m_dotaPath->text());
+    if (!detectedPath.isEmpty() && detectedPath != m_dotaPath->text())
+    {
+        m_dotaPath->setText(detectedPath);
+        m_store.config().dota2Path = detectedPath;
+        m_store.save();
+        m_statusBar->showMessage(QStringLiteral("Dota 2 detectado automáticamente"));
+    }
 }
 
 void MainWindow::applyCurrentProfile()
@@ -318,7 +366,7 @@ void MainWindow::applyCurrentProfile()
     if (it == profiles.cend())
     {
         m_accountName->setText(QStringLiteral("Sin cuenta"));
-        m_accountMeta->setText(QStringLiteral("Agrega una cuenta para jugar"));
+        m_accountMeta->setText(QStringLiteral("Inicia sesión para continuar"));
         m_avatar->setPixmap(QPixmap());
         m_avatar->setText(QStringLiteral("?"));
         m_rankLabel->setText(QStringLiteral("MMR --"));
@@ -460,14 +508,15 @@ void MainWindow::play()
         return;
     }
 
-    const QString dotaPath = m_dotaPath->text().trimmed();
+    const QString dotaPath = DotaPathDetector::resolve(m_dotaPath->text());
     if (dotaPath.isEmpty())
     {
         QMessageBox::information(this, QStringLiteral("Dota 2"),
-                                 QStringLiteral("Selecciona dota2.exe antes de jugar."));
+                                 QStringLiteral("No se encontró dota2.exe. Usa Auto-detectar o selecciona la instalación de Dota 2."));
         return;
     }
 
+    m_dotaPath->setText(dotaPath);
     m_store.config().dota2Path = dotaPath;
     m_store.config().enableConsole = m_console->isChecked();
     m_store.config().skipIntro = m_novid->isChecked();

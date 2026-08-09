@@ -14,14 +14,18 @@ Inspirado en el launcher WPF de SKYNET escrito en **Qt 6 / C++** (Widgets + Netw
   ventana principal; cada cuenta conserva su token y su identidad
   (AccountId/SteamId) para el lanzamiento.
 - **Indicador de servidor**: comprobación periódica de `GET /api/version`
-  (en línea / fuera de línea + versión).
+  (comprobando / en línea / fuera de línea + versión), visible como estado de
+  la cabecera y no como un marcador `--`.
+- **Dashboard moderno**: tarjetas con gradientes, sombras, status pills y
+  acciones compactas; no incluye un botón innecesario de `Agregar cuenta`.
 - **Tienda web sin segundo login**: el botón `TIENDA` solicita un código
   temporal al servidor y abre `/store` en el navegador; la cuenta es siempre el
   perfil activo y el token permanente no se expone en la URL.
 - **Perfil de la cuenta activa**: nombre, AccountId, SteamId y nivel desde
   `GET /api/users/me`.
-- **Detección de Dota 2**: auto-detección por rutas comunes y registro de Steam
-  (Windows), o selección manual de `dota2.exe`.
+- **Detección de Dota 2**: valida el path guardado, acepta raíz de Dota/Steam o
+  `dota2.exe`, lee registro/VDF de bibliotecas Steam y prueba candidatos de
+  entorno y unidades (Windows), además de selección manual.
 - **Lanzamiento con inyección**: `CreateProcessW` suspendido, inyección de
   `steam_api64.dll` (`CreateRemoteThread`/`LoadLibraryW`) o redirección del
   import estático, sin tocar la carpeta del juego. El payload se copia a un
@@ -84,5 +88,6 @@ resources/   theme.qss
   revalidar solo al iniciar.
 - Vistas de usuarios en línea y estado de partidas usando `GET /api/users`.
 - Icono/avatares de cuenta desde `GET /api/users/{steamId}/avatar`.
-- Tienda web same-origin desde el launcher con compra e inventario local.
+- Validación end-to-end de la tienda en Windows con compra, sesión revocada y
+  recepción del inventario en el cliente real.
 - Instalador (windeployqt) y actualización automática del payload.

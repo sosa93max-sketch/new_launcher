@@ -57,3 +57,28 @@ La prueba manual en Windows debe cubrir: iniciar sesión con A, pulsar `TIENDA`,
 comprar un producto activo, confirmar el artículo en el inventario de Dota,
 cerrar/reabrir el juego y repetir con la cuenta B para verificar que el código y
 la identidad no se mezclan.
+
+## Sesión 22 — tienda, estado del servidor y UI principal
+
+Se corrigieron los pendientes de la revisión del launcher:
+
+- El botón `Agregar cuenta` ya no se muestra en el dashboard. El login inicial
+  sigue funcionando desde `main.cpp` y el cierre de sesión vuelve a abrir el
+  diálogo existente.
+- El indicador que aparecía como `--` ahora está conectado a
+  `ServerClient::pingFinished` y muestra `COMPROBANDO`, `SERVIDOR EN LÍNEA`
+  con versión o `SERVIDOR SIN RESPUESTA`, con una pastilla de estado visible.
+- `MainWindow` usa un dashboard más amplio con tarjetas, gradientes, sombras,
+  bordes suaves, botones de acción y un tema oscuro glassmorphism. La lógica de
+  cuenta, tienda y lanzamiento conserva sus contratos existentes.
+- La autodetección ya no depende de cinco rutas fijas. Valida el archivo real,
+  acepta un ejecutable o una raíz de Dota/Steam, revisa el path guardado, VDF de
+  bibliotecas Steam, registro de Windows, variables de entorno y candidatos
+  comunes de las unidades. `play()` vuelve a resolver la ruta antes de lanzar.
+- Cuando el launcher llama a `/api/presence/offline`, el servidor revoca el
+  mismo token usado por el handoff de la tienda; una pestaña abierta pierde el
+  acceso mediante el heartbeat web.
+
+`git diff --check` pasa. La configuración CMake fue intentada en Linux, pero
+este entorno no tiene Qt6 instalado; la compilación final debe ejecutarse en la
+máquina Windows/CI con Qt6 y el payload `steam_api64.dll` disponible.
