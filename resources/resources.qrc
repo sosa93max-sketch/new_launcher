@@ -12,4 +12,17 @@
         <file>icons/check.svg</file>
         <file>appicon-256.png</file>
     </qresource>
+
+<!-- resources.qrc -->
+<qresource prefix="/icons/rank">
+    <file>icons/rank/rank_1.png</file>
+    <file>icons/rank/rank_2.png</file>
+    <file>icons/rank/rank_3.png</file>
+    <file>icons/rank/rank_4.png</file>
+    <file>icons/rank/rank_5.png</file>
+    <file>icons/rank/rank_6.png</file>
+    <file>icons/rank/rank_7.png</file>
+    <file>icons/rank/rank_8.png</file>
+</qresource>
+
 </RCC>
