@@ -82,3 +82,27 @@ Se corrigieron los pendientes de la revisión del launcher:
 `git diff --check` pasa. La configuración CMake fue intentada en Linux, pero
 este entorno no tiene Qt6 instalado; la compilación final debe ejecutarse en la
 máquina Windows/CI con Qt6 y el payload `steam_api64.dll` disponible.
+
+## Sesión 23 — rediseño total del dashboard
+
+`MainWindow` conserva las conexiones de login, estado del servidor, avatar,
+rank, handoff seguro de tienda, autodetección, configuración de argumentos y
+lanzamiento, pero ahora presenta una UI completamente nueva:
+
+- barra lateral con marca, navegación a tienda, estado de sesión y cierre de
+  sesión;
+- portada principal con acción `JUGAR DOTA 2` y tarjeta de cuenta activa;
+- métricas separadas para rango, nivel y entorno;
+- panel único de configuración para ruta de Dota, servidor y opciones de
+  lanzamiento;
+- tema visual nuevo con jerarquía glassmorphism, gradientes, sombras, estados y
+  tarjetas responsive para el dashboard.
+
+La tienda web ya tiene su propia pantalla de sesión cerrada; el launcher solo
+abre el handoff autenticado y no expone el token permanente al navegador.
+
+Verificación: `git diff --check` pasa. CMake se configuró hasta el chequeo de
+dependencia, pero este entorno Linux no tiene Qt6; el build MinGW/Qt6 y la
+prueba visual de la nueva UI deben ejecutarse en Windows/CI. La validación
+pendiente también debe comprar un item desde la tienda y comprobar que Dota lo
+recibe sin reinicio.

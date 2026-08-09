@@ -301,3 +301,190 @@ QProgressBar#BusyBar::chunk {
     background-color: #1f6feb;
     border-radius: 2px;
 }
+
+/* ---------- Dashboard launcher ---------- */
+QWidget#LauncherRoot {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                stop:0 #07101d, stop:0.45 #0d1a2c, stop:1 #08111f);
+}
+
+QFrame#Sidebar {
+    background: qlineargradient(x1:0, y1:0, x2:0.8, y2:1,
+                                stop:0 #111f35, stop:1 #0b1628);
+    border: 1px solid rgba(117, 165, 224, 0.23);
+    border-radius: 24px;
+}
+
+QLabel#BrandMark {
+    color: #07111f;
+    font-size: 19px;
+    font-weight: 900;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                stop:0 #66e5e2, stop:1 #6db5ff);
+    border-radius: 14px;
+}
+
+QLabel#BrandName {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 2px;
+}
+
+QLabel#BrandCaption, QLabel#SideCaption {
+    color: #7590b2;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+}
+
+QLabel#SideInfo {
+    color: #9eb4d0;
+    font-size: 11px;
+}
+
+QLabel#SideVersion {
+    color: #5d7698;
+    font-size: 10px;
+    letter-spacing: .8px;
+}
+
+QFrame#SidebarStatus {
+    background: rgba(5, 14, 27, .45);
+    border: 1px solid rgba(117, 165, 224, .14);
+    border-radius: 14px;
+}
+
+QPushButton#NavButtonActive {
+    text-align: left;
+    color: #08111f;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 #66e5e2, stop:1 #6db5ff);
+    border: none;
+    border-radius: 13px;
+    padding: 11px 14px;
+    font-weight: 900;
+    letter-spacing: .5px;
+}
+
+QPushButton#NavButtonActive:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 #8af3e9, stop:1 #8ec5ff);
+}
+
+QFrame#HeroCard {
+    min-height: 235px;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                stop:0 #19365a, stop:0.52 #142746, stop:1 #102039);
+    border: 1px solid rgba(109, 181, 255, .35);
+    border-radius: 26px;
+}
+
+QLabel#HeroEyebrow, QLabel#SectionLabel {
+    color: #66e5e2;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 1.8px;
+}
+
+QLabel#HeroTitle {
+    color: #ffffff;
+    font-size: 38px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    margin-top: 5px;
+}
+
+QLabel#HeroText {
+    color: #a9c0dd;
+    font-size: 14px;
+}
+
+QFrame#AccountCard {
+    background: rgba(5, 14, 27, .42);
+    border: 1px solid rgba(140, 191, 255, .22);
+    border-radius: 19px;
+}
+
+QLabel#AvatarLabel {
+    color: #08111f;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                stop:0 #ffc86b, stop:1 #ff8793);
+    border: 3px solid rgba(255, 255, 255, .22);
+    border-radius: 36px;
+    font-size: 25px;
+    font-weight: 900;
+}
+
+QLabel#AccountName {
+    color: #ffffff;
+    font-size: 17px;
+    font-weight: 800;
+}
+
+QPushButton#LaunchButton {
+    color: #07101d;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 #ffc86b, stop:1 #ff8793);
+    border: none;
+    border-radius: 14px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: .8px;
+}
+
+QPushButton#LaunchButton:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                stop:0 #ffdc91, stop:1 #ff9da7);
+}
+
+QFrame#MetricCard {
+    min-height: 72px;
+    background: rgba(15, 30, 51, .76);
+    border: 1px solid rgba(116, 169, 232, .20);
+    border-radius: 16px;
+}
+
+QLabel#MetricLabel, QLabel#FieldLabel {
+    color: #7290b4;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 1.2px;
+}
+
+QLabel#MetricValue {
+    color: #f4f8ff;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+QFrame#SurfaceCard {
+    background: rgba(13, 28, 48, .78);
+    border: 1px solid rgba(116, 169, 232, .20);
+    border-radius: 19px;
+}
+
+QLineEdit#PathField {
+    min-height: 38px;
+    background: rgba(4, 12, 24, .64);
+    border: 1px solid rgba(116, 169, 232, .25);
+    border-radius: 11px;
+    padding: 8px 12px;
+    color: #e9f2ff;
+}
+
+QLineEdit#PathField:focus {
+    border: 1px solid #66e5e2;
+}
+
+QFrame#FooterCard {
+    background: rgba(13, 28, 48, .58);
+    border: 1px solid rgba(116, 169, 232, .14);
+    border-radius: 13px;
+}
+
+QLabel#FooterDot {
+    color: #66e5e2;
+    font-size: 15px;
+}

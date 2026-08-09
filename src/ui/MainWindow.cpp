@@ -12,6 +12,7 @@
 #include <QDateTime>
 #include <QDesktopServices>
 #include <QFileDialog>
+#include <QFrame>
 #include <QGraphicsDropShadowEffect>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -94,122 +95,272 @@ MainWindow::MainWindow(ConfigStore &store, ServerClient &server, QWidget *parent
 
 void MainWindow::buildUi()
 {
+    buildDashboardUi();
+}
+
+void MainWindow::buildDashboardUi()
+{
+    setWindowTitle(QStringLiteral("D2Max · Centro de juego"));
+    resize(1180, 760);
+    setMinimumSize(980, 660);
+
     auto *central = new QWidget(this);
     central->setObjectName(QStringLiteral("LauncherRoot"));
-    auto *layout = new QVBoxLayout(central);
-    layout->setContentsMargins(30, 24, 30, 14);
-    layout->setSpacing(16);
+    auto *shell = new QHBoxLayout(central);
+    shell->setContentsMargins(22, 22, 22, 16);
+    shell->setSpacing(20);
 
-    // ---- header ----
-    auto *header = new QHBoxLayout;
-    auto *title = new QLabel(QStringLiteral("D2MAX LAUNCHER"), central);
-    title->setObjectName(QStringLiteral("TitleLabel"));
-    m_statusLabel = new QLabel(QStringLiteral("● COMPROBANDO SERVIDOR"), central);
-    m_statusLabel->setObjectName(QStringLiteral("StatusChecking"));
-    auto *logoutButton = new QPushButton(QStringLiteral("SALIR"), central);
+    auto *sidebar = new QFrame(central);
+    sidebar->setObjectName(QStringLiteral("Sidebar"));
+    sidebar->setFixedWidth(222);
+    addCardShadow(sidebar);
+    auto *sideLayout = new QVBoxLayout(sidebar);
+    sideLayout->setContentsMargins(20, 22, 20, 20);
+    sideLayout->setSpacing(12);
+
+    auto *brandRow = new QHBoxLayout;
+    auto *brandMark = new QLabel(QStringLiteral("D2"), sidebar);
+    brandMark->setObjectName(QStringLiteral("BrandMark"));
+    brandMark->setFixedSize(44, 44);
+    brandMark->setAlignment(Qt::AlignCenter);
+    auto *brandText = new QVBoxLayout;
+    auto *brandName = new QLabel(QStringLiteral("D2MAX"), sidebar);
+    brandName->setObjectName(QStringLiteral("BrandName"));
+    auto *brandCaption = new QLabel(QStringLiteral("GAME HUB"), sidebar);
+    brandCaption->setObjectName(QStringLiteral("BrandCaption"));
+    brandText->addWidget(brandName);
+    brandText->addWidget(brandCaption);
+    brandRow->addWidget(brandMark);
+    brandRow->addSpacing(10);
+    brandRow->addLayout(brandText);
+    brandRow->addStretch();
+    sideLayout->addLayout(brandRow);
+    sideLayout->addSpacing(22);
+
+    auto *navigationLabel = new QLabel(QStringLiteral("NAVEGACIÓN"), sidebar);
+    navigationLabel->setObjectName(QStringLiteral("SideCaption"));
+    sideLayout->addWidget(navigationLabel);
+
+    m_storeButton = new QPushButton(QStringLiteral("  TIENDA WEB"), sidebar);
+    m_storeButton->setObjectName(QStringLiteral("NavButtonActive"));
+    m_storeButton->setMinimumHeight(44);
+    sideLayout->addWidget(m_storeButton);
+
+    auto *sideInfo = new QFrame(sidebar);
+    sideInfo->setObjectName(QStringLiteral("SidebarStatus"));
+    auto *sideInfoLayout = new QVBoxLayout(sideInfo);
+    sideInfoLayout->setContentsMargins(13, 12, 13, 12);
+    auto *sideInfoTitle = new QLabel(QStringLiteral("TU SESIÓN"), sideInfo);
+    sideInfoTitle->setObjectName(QStringLiteral("SideCaption"));
+    auto *sideInfoText = new QLabel(QStringLiteral("El launcher mantiene tu acceso y prepara Dota 2 con la configuración guardada."), sideInfo);
+    sideInfoText->setObjectName(QStringLiteral("SideInfo"));
+    sideInfoText->setWordWrap(true);
+    sideInfoLayout->addWidget(sideInfoTitle);
+    sideInfoLayout->addWidget(sideInfoText);
+    sideLayout->addWidget(sideInfo);
+    sideLayout->addStretch();
+
+    auto *sideVersion = new QLabel(QStringLiteral("D2MAX LAUNCHER  ·  1.0"), sidebar);
+    sideVersion->setObjectName(QStringLiteral("SideVersion"));
+    sideLayout->addWidget(sideVersion);
+    auto *logoutButton = new QPushButton(QStringLiteral("CERRAR SESIÓN"), sidebar);
     logoutButton->setObjectName(QStringLiteral("GhostButton"));
-    m_storeButton = new QPushButton(QStringLiteral("TIENDA"), central);
-    m_storeButton->setObjectName(QStringLiteral("AccentButton"));
-    header->addWidget(title);
-    header->addStretch();
-    header->addWidget(m_statusLabel);
-    header->addWidget(m_storeButton);
-    header->addWidget(logoutButton);
-    layout->addLayout(header);
+    logoutButton->setMinimumHeight(40);
+    sideLayout->addWidget(logoutButton);
+    shell->addWidget(sidebar);
 
-    // ---- account card ----
-    auto *accountBox = new QGroupBox(QStringLiteral("CUENTA"), central);
-    accountBox->setObjectName(QStringLiteral("PanelCard"));
-    addCardShadow(accountBox);
-    auto *accountLayout = new QVBoxLayout(accountBox);
+    auto *content = new QWidget(central);
+    auto *contentLayout = new QVBoxLayout(content);
+    contentLayout->setContentsMargins(0, 0, 0, 0);
+    contentLayout->setSpacing(17);
+
+    auto *topbar = new QHBoxLayout;
+    auto *topCopy = new QVBoxLayout;
+    auto *topTitle = new QLabel(QStringLiteral("CENTRO DE JUEGO"), content);
+    topTitle->setObjectName(QStringLiteral("TitleLabel"));
+    auto *topSubtitle = new QLabel(QStringLiteral("Todo listo para entrar a la partida"), content);
+    topSubtitle->setObjectName(QStringLiteral("SubtitleLabel"));
+    topCopy->addWidget(topTitle);
+    topCopy->addWidget(topSubtitle);
+    m_statusLabel = new QLabel(QStringLiteral("● COMPROBANDO SERVIDOR"), content);
+    m_statusLabel->setObjectName(QStringLiteral("StatusChecking"));
+    topbar->addLayout(topCopy);
+    topbar->addStretch();
+    topbar->addWidget(m_statusLabel);
+    contentLayout->addLayout(topbar);
+
+    auto *hero = new QFrame(content);
+    hero->setObjectName(QStringLiteral("HeroCard"));
+    addCardShadow(hero);
+    auto *heroLayout = new QHBoxLayout(hero);
+    heroLayout->setContentsMargins(30, 28, 24, 24);
+    heroLayout->setSpacing(24);
+
+    auto *heroCopy = new QVBoxLayout;
+    auto *heroEyebrow = new QLabel(QStringLiteral("D2MAX  /  PARTIDA LOCAL"), hero);
+    heroEyebrow->setObjectName(QStringLiteral("HeroEyebrow"));
+    auto *heroTitle = new QLabel(QStringLiteral("Juega a tu manera."), hero);
+    heroTitle->setObjectName(QStringLiteral("HeroTitle"));
+    heroTitle->setWordWrap(true);
+    auto *heroText = new QLabel(QStringLiteral("Tu cuenta, tu inventario y tu servidor en un solo lugar. Entra a Dota 2 cuando estés listo."), hero);
+    heroText->setObjectName(QStringLiteral("HeroText"));
+    heroText->setWordWrap(true);
+    heroText->setMaximumWidth(510);
+    m_playButton = new QPushButton(QStringLiteral("JUGAR DOTA 2"), hero);
+    m_playButton->setObjectName(QStringLiteral("LaunchButton"));
+    m_playButton->setMinimumHeight(52);
+    m_playButton->setMinimumWidth(205);
+    heroCopy->addWidget(heroEyebrow);
+    heroCopy->addWidget(heroTitle);
+    heroCopy->addWidget(heroText);
+    heroCopy->addSpacing(13);
+    heroCopy->addWidget(m_playButton, 0, Qt::AlignLeft);
+    heroCopy->addStretch();
+    heroLayout->addLayout(heroCopy, 1);
+
+    auto *accountCard = new QFrame(hero);
+    accountCard->setObjectName(QStringLiteral("AccountCard"));
+    accountCard->setMinimumWidth(270);
+    auto *accountLayout = new QVBoxLayout(accountCard);
+    accountLayout->setContentsMargins(18, 18, 18, 18);
+    accountLayout->setSpacing(10);
+    auto *accountCaption = new QLabel(QStringLiteral("CUENTA ACTIVA"), accountCard);
+    accountCaption->setObjectName(QStringLiteral("SideCaption"));
     auto *accountRow = new QHBoxLayout;
-
-    m_avatar = new QLabel(accountBox);
-    m_avatar->setFixedSize(64, 64);
+    m_avatar = new QLabel(accountCard);
+    m_avatar->setObjectName(QStringLiteral("AvatarLabel"));
+    m_avatar->setFixedSize(72, 72);
     m_avatar->setAlignment(Qt::AlignCenter);
-    m_avatar->setStyleSheet(QStringLiteral(
-        "border-radius: 32px; background: #1f6feb; color: white;"
-        "font-size: 26px; font-weight: 700;"));
     m_avatar->setText(QStringLiteral("?"));
-
     auto *infoCol = new QVBoxLayout;
-    m_accountName = new QLabel(QStringLiteral("Sin cuenta"), accountBox);
-    m_accountName->setStyleSheet(QStringLiteral("font-size: 15px; font-weight: 700;"));
-    m_accountMeta = new QLabel(QStringLiteral("--"), accountBox);
+    m_accountName = new QLabel(QStringLiteral("Sin cuenta"), accountCard);
+    m_accountName->setObjectName(QStringLiteral("AccountName"));
+    m_accountName->setWordWrap(true);
+    m_accountMeta = new QLabel(QStringLiteral("Inicia sesión para continuar"), accountCard);
     m_accountMeta->setObjectName(QStringLiteral("SubtitleLabel"));
+    m_accountMeta->setWordWrap(true);
     infoCol->addWidget(m_accountName);
     infoCol->addWidget(m_accountMeta);
-
-    m_rankLabel = new QLabel(QStringLiteral("MMR --"), accountBox);
-    m_rankLabel->setObjectName(QStringLiteral("SubtitleLabel"));
-    m_level = new QLabel(QStringLiteral("Nivel --"), accountBox);
-    m_level->setObjectName(QStringLiteral("SubtitleLabel"));
-
     accountRow->addWidget(m_avatar);
-    accountRow->addSpacing(16);
-    accountRow->addLayout(infoCol);
-    accountRow->addStretch();
-    accountRow->addWidget(m_rankLabel);
-    accountRow->addSpacing(16);
-    accountRow->addWidget(m_level);
+    accountRow->addSpacing(12);
+    accountRow->addLayout(infoCol, 1);
+    accountLayout->addWidget(accountCaption);
     accountLayout->addLayout(accountRow);
-    layout->addWidget(accountBox);
+    heroLayout->addWidget(accountCard);
+    contentLayout->addWidget(hero);
 
-    // ---- dota path ----
-    auto *gameBox = new QGroupBox(QStringLiteral("DOTA 2"), central);
-    gameBox->setObjectName(QStringLiteral("PanelCard"));
-    addCardShadow(gameBox);
-    auto *gameLayout = new QVBoxLayout(gameBox);
+    auto *metrics = new QHBoxLayout;
+    metrics->setSpacing(12);
+    auto makeMetric = [&](const QString &label, QLabel *&value) {
+        auto *card = new QFrame(content);
+        card->setObjectName(QStringLiteral("MetricCard"));
+        auto *cardLayout = new QVBoxLayout(card);
+        cardLayout->setContentsMargins(17, 14, 17, 14);
+        auto *caption = new QLabel(label, card);
+        caption->setObjectName(QStringLiteral("MetricLabel"));
+        value = new QLabel(QStringLiteral("--"), card);
+        value->setObjectName(QStringLiteral("MetricValue"));
+        cardLayout->addWidget(caption);
+        cardLayout->addWidget(value);
+        metrics->addWidget(card, 1);
+    };
+    makeMetric(QStringLiteral("RANGO COMPETITIVO"), m_rankLabel);
+    makeMetric(QStringLiteral("NIVEL DE CUENTA"), m_level);
+    auto *regionCard = new QFrame(content);
+    regionCard->setObjectName(QStringLiteral("MetricCard"));
+    auto *regionLayout = new QVBoxLayout(regionCard);
+    regionLayout->setContentsMargins(17, 14, 17, 14);
+    auto *regionCaption = new QLabel(QStringLiteral("ENTORNO"), regionCard);
+    regionCaption->setObjectName(QStringLiteral("MetricLabel"));
+    auto *regionValue = new QLabel(QStringLiteral("SERVIDOR D2MAX"), regionCard);
+    regionValue->setObjectName(QStringLiteral("MetricValue"));
+    regionLayout->addWidget(regionCaption);
+    regionLayout->addWidget(regionValue);
+    metrics->addWidget(regionCard, 1);
+    contentLayout->addLayout(metrics);
+
+    auto *settings = new QFrame(content);
+    settings->setObjectName(QStringLiteral("SurfaceCard"));
+    addCardShadow(settings);
+    auto *settingsLayout = new QVBoxLayout(settings);
+    settingsLayout->setContentsMargins(20, 17, 20, 17);
+    settingsLayout->setSpacing(12);
+    auto *settingsHead = new QHBoxLayout;
+    auto *settingsTitle = new QLabel(QStringLiteral("CONFIGURACIÓN DE SESIÓN"), settings);
+    settingsTitle->setObjectName(QStringLiteral("SectionLabel"));
+    auto *settingsHint = new QLabel(QStringLiteral("Se conserva en este equipo"), settings);
+    settingsHint->setObjectName(QStringLiteral("SubtitleLabel"));
+    settingsHead->addWidget(settingsTitle);
+    settingsHead->addStretch();
+    settingsHead->addWidget(settingsHint);
+    settingsLayout->addLayout(settingsHead);
+
+    auto *pathTitle = new QLabel(QStringLiteral("UBICACIÓN DE DOTA 2"), settings);
+    pathTitle->setObjectName(QStringLiteral("FieldLabel"));
+    settingsLayout->addWidget(pathTitle);
     auto *pathRow = new QHBoxLayout;
-    m_dotaPath = new QLineEdit(m_store.config().dota2Path, gameBox);
-    m_dotaPath->setPlaceholderText(QStringLiteral("ruta a ...\\game\\bin\\win64\\dota2.exe"));
-    auto *browseButton = new QPushButton(QStringLiteral("EXAMINAR"), gameBox);
+    pathRow->setSpacing(8);
+    m_dotaPath = new QLineEdit(m_store.config().dota2Path, settings);
+    m_dotaPath->setObjectName(QStringLiteral("PathField"));
+    m_dotaPath->setPlaceholderText(QStringLiteral("Ruta a dota2.exe o a la instalación de Dota 2"));
+    auto *browseButton = new QPushButton(QStringLiteral("EXAMINAR"), settings);
     browseButton->setObjectName(QStringLiteral("GhostButton"));
-    auto *detectButton = new QPushButton(QStringLiteral("AUTO-DETECTAR"), gameBox);
+    auto *detectButton = new QPushButton(QStringLiteral("AUTO-DETECTAR"), settings);
     detectButton->setObjectName(QStringLiteral("GhostButton"));
     pathRow->addWidget(m_dotaPath, 1);
     pathRow->addWidget(browseButton);
     pathRow->addWidget(detectButton);
-    gameLayout->addLayout(pathRow);
+    settingsLayout->addLayout(pathRow);
+
+    auto *serverTitle = new QLabel(QStringLiteral("SERVIDOR"), settings);
+    serverTitle->setObjectName(QStringLiteral("FieldLabel"));
+    settingsLayout->addWidget(serverTitle);
+    auto *serverRow = new QHBoxLayout;
+    serverRow->setSpacing(8);
+    m_serverUrl = new QLineEdit(m_store.config().serverUrl, settings);
+    m_serverUrl->setObjectName(QStringLiteral("PathField"));
+    m_serverUrl->setPlaceholderText(QStringLiteral("http://127.0.0.1:27015"));
+    auto *applyServerButton = new QPushButton(QStringLiteral("APLICAR"), settings);
+    applyServerButton->setObjectName(QStringLiteral("GhostButton"));
+    serverRow->addWidget(m_serverUrl, 1);
+    serverRow->addWidget(applyServerButton);
+    settingsLayout->addLayout(serverRow);
 
     auto *argsRow = new QHBoxLayout;
-    m_console = new QCheckBox(QStringLiteral("-console"), gameBox);
+    argsRow->setSpacing(18);
+    m_console = new QCheckBox(QStringLiteral("Consola -console"), settings);
     m_console->setChecked(m_store.config().enableConsole);
-    m_novid = new QCheckBox(QStringLiteral("-novid"), gameBox);
+    m_novid = new QCheckBox(QStringLiteral("Saltar intro -novid"), settings);
     m_novid->setChecked(m_store.config().skipIntro);
-    m_insecure = new QCheckBox(QStringLiteral("-insecure"), gameBox);
+    m_insecure = new QCheckBox(QStringLiteral("Modo local -insecure"), settings);
     m_insecure->setChecked(m_store.config().insecureMode);
     argsRow->addWidget(m_console);
     argsRow->addWidget(m_novid);
     argsRow->addWidget(m_insecure);
     argsRow->addStretch();
-    gameLayout->addLayout(argsRow);
-    layout->addWidget(gameBox);
+    settingsLayout->addLayout(argsRow);
+    contentLayout->addWidget(settings);
 
-    // ---- server ----
-    auto *serverBox = new QGroupBox(QStringLiteral("SERVIDOR D2"), central);
-    serverBox->setObjectName(QStringLiteral("PanelCard"));
-    addCardShadow(serverBox);
-    auto *serverLayout = new QHBoxLayout(serverBox);
-    m_serverUrl = new QLineEdit(m_store.config().serverUrl, serverBox);
-    auto *applyServerButton = new QPushButton(QStringLiteral("APLICAR"), serverBox);
-    applyServerButton->setObjectName(QStringLiteral("GhostButton"));
-    serverLayout->addWidget(m_serverUrl, 1);
-    serverLayout->addWidget(applyServerButton);
-    layout->addWidget(serverBox);
-
-    // ---- play ----
-    m_playButton = new QPushButton(QStringLiteral("JUGAR DOTA 2"), central);
-    m_playButton->setObjectName(QStringLiteral("AccentButton"));
-    m_playButton->setMinimumHeight(44);
-    layout->addWidget(m_playButton);
-    layout->addStretch();
+    auto *footerCard = new QFrame(content);
+    footerCard->setObjectName(QStringLiteral("FooterCard"));
+    auto *footerLayout = new QHBoxLayout(footerCard);
+    footerLayout->setContentsMargins(16, 11, 16, 11);
+    auto *footerDot = new QLabel(QStringLiteral("●"), footerCard);
+    footerDot->setObjectName(QStringLiteral("FooterDot"));
+    auto *footerText = new QLabel(QStringLiteral("El cliente se actualizará automáticamente al comprar desde la tienda web."), footerCard);
+    footerText->setObjectName(QStringLiteral("SubtitleLabel"));
+    footerText->setWordWrap(true);
+    footerLayout->addWidget(footerDot);
+    footerLayout->addSpacing(8);
+    footerLayout->addWidget(footerText, 1);
+    contentLayout->addWidget(footerCard);
+    contentLayout->addStretch();
+    shell->addWidget(content, 1);
 
     setCentralWidget(central);
     m_statusBar = statusBar();
-    m_statusBar->showMessage(QStringLiteral("Listo"));
+    m_statusBar->showMessage(QStringLiteral("Listo para jugar"));
 
-    // ---- connections ----
     connect(m_storeButton, &QPushButton::clicked, this, &MainWindow::openStore);
     connect(logoutButton, &QPushButton::clicked, this, &MainWindow::logout);
     connect(browseButton, &QPushButton::clicked, this, [this]() {
@@ -232,7 +383,7 @@ void MainWindow::buildUi()
             m_statusBar->showMessage(QStringLiteral("Dota 2 detectado automáticamente"));
         }
         else
-            m_statusBar->showMessage(QStringLiteral("No se encontró dota2.exe; selecciona la carpeta o el ejecutable"));
+            m_statusBar->showMessage(QStringLiteral("No se encontró dota2.exe; selecciona la instalación"));
     });
     connect(applyServerButton, &QPushButton::clicked, this, [this]() {
         m_store.config().serverUrl = m_serverUrl->text().trimmed();
@@ -304,7 +455,7 @@ void MainWindow::buildUi()
     connect(&m_server, &ServerClient::rankFinished, this,
             [this](bool ok, int mmr, int rankTier, int rankStar) {
                 m_rankLabel->setText(ok
-                    ? QStringLiteral("MMR %1  •  %2 %3")
+                    ? QStringLiteral("MMR %1  ·  %2 %3")
                           .arg(mmr)
                           .arg(medalName(rankTier))
                           .arg(rankStar)
@@ -315,7 +466,7 @@ void MainWindow::buildUi()
             [this](bool ok, const QByteArray &png) {
                 if (!ok)
                     return;
-                const auto pixmap = circularAvatar(png, 64);
+                const auto pixmap = circularAvatar(png, 72);
                 if (pixmap.isNull())
                     return;
                 m_avatar->setPixmap(pixmap);
