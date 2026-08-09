@@ -62,9 +62,9 @@ qint64 marketCents(const StoreCatalogItemData &item)
 void addShadow(QWidget *widget)
 {
     auto *effect = new QGraphicsDropShadowEffect(widget);
-    effect->setBlurRadius(28);
-    effect->setOffset(0, 8);
-    effect->setColor(QColor(0, 0, 0, 105));
+    effect->setBlurRadius(16);
+    effect->setOffset(0, 4);
+    effect->setColor(QColor(0, 0, 0, 60));
     widget->setGraphicsEffect(effect);
 }
 }
@@ -92,7 +92,7 @@ StoreView::StoreView(ServerClient &server, QWidget *parent)
                 m_totalPages = std::max(1, (m_totalCount + m_pageSize - 1) / m_pageSize);
                 populateFilters(page);
                 m_catalog = page.items;
-                m_catalogMeta->setText(QStringLiteral("%1 artículos publicados · página %2 de %3")
+                m_catalogMeta->setText(QStringLiteral("%1 artículos · pág. %2 de %3")
                                            .arg(m_totalCount)
                                            .arg(m_page)
                                            .arg(m_totalPages));
@@ -113,8 +113,8 @@ StoreView::StoreView(ServerClient &server, QWidget *parent)
                 }
                 m_walletValue->setText(dollars(wallet.availableDollars));
                 m_walletMeta->setText(wallet.reservedDollars > 0
-                                          ? QStringLiteral("%1 reservados en checkout").arg(dollars(wallet.reservedDollars))
-                                          : QStringLiteral("Saldo disponible para comprar"));
+                                          ? QStringLiteral("%1 reservados").arg(dollars(wallet.reservedDollars))
+                                          : QStringLiteral("Saldo disponible"));
             });
 
     connect(&m_server, &ServerClient::storeInventoryFinished,
@@ -153,7 +153,7 @@ StoreView::StoreView(ServerClient &server, QWidget *parent)
                     return;
                 }
                 m_stateLabel->setObjectName(QStringLiteral("StoreSuccess"));
-                m_stateLabel->setText(QStringLiteral("Compra completada · el artículo ya está en tu inventario de Dota 2."));
+                m_stateLabel->setText(QStringLiteral("Compra completada · artículo en tu inventario."));
                 m_stateLabel->style()->unpolish(m_stateLabel);
                 m_stateLabel->style()->polish(m_stateLabel);
                 m_walletValue->setText(dollars(purchase.wallet.availableDollars));
@@ -168,22 +168,22 @@ StoreView::StoreView(ServerClient &server, QWidget *parent)
 void StoreView::buildUi()
 {
     auto *root = new QVBoxLayout(this);
-    root->setContentsMargins(4, 4, 12, 10);
-    root->setSpacing(14);
+    root->setContentsMargins(0, 0, 8, 8);
+    root->setSpacing(10);
 
     auto *header = new QHBoxLayout;
-    header->setSpacing(13);
-    auto *back = new QPushButton(QStringLiteral("‹  CENTRO DE JUEGO"), this);
+    header->setSpacing(10);
+    auto *back = new QPushButton(QStringLiteral("‹  CENTRO"), this);
     back->setObjectName(QStringLiteral("StoreBackButton"));
-    back->setMinimumHeight(36);
+    back->setMinimumHeight(30);
     connect(back, &QPushButton::clicked, this, &StoreView::backRequested);
     header->addWidget(back, 0, Qt::AlignVCenter);
 
     auto *heading = new QVBoxLayout;
-    heading->setSpacing(1);
+    heading->setSpacing(0);
     auto *title = new QLabel(QStringLiteral("TIENDA"), this);
     title->setObjectName(QStringLiteral("StoreTitle"));
-    auto *subtitle = new QLabel(QStringLiteral("Catálogo, saldo e inventario dentro del launcher"), this);
+    auto *subtitle = new QLabel(QStringLiteral("Catálogo, saldo e inventario"), this);
     subtitle->setObjectName(QStringLiteral("StoreSubtitle"));
     heading->addWidget(title);
     heading->addWidget(subtitle);
@@ -192,22 +192,22 @@ void StoreView::buildUi()
 
     auto *wallet = new QFrame(this);
     wallet->setObjectName(QStringLiteral("StoreWalletCard"));
-    wallet->setMinimumWidth(220);
+    wallet->setMinimumWidth(180);
     addShadow(wallet);
     auto *walletLayout = new QHBoxLayout(wallet);
-    walletLayout->setContentsMargins(15, 9, 15, 9);
-    walletLayout->setSpacing(11);
+    walletLayout->setContentsMargins(12, 7, 12, 7);
+    walletLayout->setSpacing(8);
     auto *walletIcon = new QLabel(QStringLiteral("$"), wallet);
     walletIcon->setObjectName(QStringLiteral("StoreWalletIcon"));
-    walletIcon->setFixedSize(35, 35);
+    walletIcon->setFixedSize(28, 28);
     walletIcon->setAlignment(Qt::AlignCenter);
     auto *walletCopy = new QVBoxLayout;
     walletCopy->setSpacing(0);
-    auto *walletLabel = new QLabel(QStringLiteral("SALDO DISPONIBLE"), wallet);
+    auto *walletLabel = new QLabel(QStringLiteral("SALDO"), wallet);
     walletLabel->setObjectName(QStringLiteral("StoreOverline"));
     m_walletValue = new QLabel(QStringLiteral("—"), wallet);
     m_walletValue->setObjectName(QStringLiteral("StoreWalletValue"));
-    m_walletMeta = new QLabel(QStringLiteral("Cargando saldo…"), wallet);
+    m_walletMeta = new QLabel(QStringLiteral("Cargando…"), wallet);
     m_walletMeta->setObjectName(QStringLiteral("StoreMuted"));
     walletCopy->addWidget(walletLabel);
     walletCopy->addWidget(m_walletValue);
@@ -225,22 +225,22 @@ void StoreView::buildUi()
     auto *body = new QWidget(scroll);
     body->setObjectName(QStringLiteral("StoreBody"));
     auto *bodyLayout = new QVBoxLayout(body);
-    bodyLayout->setContentsMargins(0, 0, 6, 18);
-    bodyLayout->setSpacing(14);
+    bodyLayout->setContentsMargins(0, 0, 4, 12);
+    bodyLayout->setSpacing(10);
 
     auto *hero = new QFrame(body);
     hero->setObjectName(QStringLiteral("StoreHeroCard"));
     addShadow(hero);
     auto *heroLayout = new QHBoxLayout(hero);
-    heroLayout->setContentsMargins(24, 20, 24, 20);
-    heroLayout->setSpacing(18);
+    heroLayout->setContentsMargins(18, 14, 18, 14);
+    heroLayout->setSpacing(14);
     auto *heroCopy = new QVBoxLayout;
-    heroCopy->setSpacing(5);
+    heroCopy->setSpacing(3);
     auto *heroOverline = new QLabel(QStringLiteral("LOADOUT · D2MAX"), hero);
     heroOverline->setObjectName(QStringLiteral("StoreOverline"));
     auto *heroTitle = new QLabel(QStringLiteral("Equipa tu próxima partida."), hero);
     heroTitle->setObjectName(QStringLiteral("StoreHeroTitle"));
-    auto *heroText = new QLabel(QStringLiteral("Compra con tu saldo local y recibe el artículo en el inventario del cliente sin cerrar Dota 2."), hero);
+    auto *heroText = new QLabel(QStringLiteral("Compra con tu saldo local y recibe el artículo en el inventario del cliente."), hero);
     heroText->setObjectName(QStringLiteral("StoreHeroText"));
     heroText->setWordWrap(true);
     heroCopy->addWidget(heroOverline);
@@ -250,10 +250,10 @@ void StoreView::buildUi()
     auto *heroBadge = new QFrame(hero);
     heroBadge->setObjectName(QStringLiteral("StoreHeroBadge"));
     auto *heroBadgeLayout = new QVBoxLayout(heroBadge);
-    heroBadgeLayout->setContentsMargins(17, 13, 17, 13);
+    heroBadgeLayout->setContentsMargins(12, 10, 12, 10);
     auto *heroBadgeTitle = new QLabel(QStringLiteral("SIN NAVEGADOR"), heroBadge);
     heroBadgeTitle->setObjectName(QStringLiteral("StoreBadgeTitle"));
-    auto *heroBadgeText = new QLabel(QStringLiteral("Sesión compartida con tu launcher"), heroBadge);
+    auto *heroBadgeText = new QLabel(QStringLiteral("Sesión compartida con el launcher"), heroBadge);
     heroBadgeText->setObjectName(QStringLiteral("StoreMuted"));
     heroBadgeText->setWordWrap(true);
     heroBadgeLayout->addWidget(heroBadgeTitle);
@@ -265,11 +265,11 @@ void StoreView::buildUi()
     filters->setObjectName(QStringLiteral("StoreFilterCard"));
     m_filterCard = filters;
     auto *filterLayout = new QHBoxLayout(filters);
-    filterLayout->setContentsMargins(12, 10, 12, 10);
-    filterLayout->setSpacing(8);
+    filterLayout->setContentsMargins(10, 8, 10, 8);
+    filterLayout->setSpacing(6);
     m_search = new QLineEdit(filters);
     m_search->setObjectName(QStringLiteral("StoreSearch"));
-    m_search->setPlaceholderText(QStringLiteral("Buscar artículos, héroes o definiciones…"));
+    m_search->setPlaceholderText(QStringLiteral("Buscar artículos, héroes…"));
     m_category = new QComboBox(filters);
     m_category->setObjectName(QStringLiteral("StoreFilter"));
     m_category->addItem(QStringLiteral("Todas las categorías"));
@@ -278,7 +278,7 @@ void StoreView::buildUi()
     m_hero->addItem(QStringLiteral("Todos los héroes"));
     m_type = new QComboBox(filters);
     m_type->setObjectName(QStringLiteral("StoreFilter"));
-    m_type->addItem(QStringLiteral("Todo el catálogo"), -1);
+    m_type->addItem(QStringLiteral("Todo"), -1);
     m_type->addItem(QStringLiteral("Cosméticos"), 0);
     m_type->addItem(QStringLiteral("Sets"), 1);
     m_type->addItem(QStringLiteral("Dota Plus"), 2);
@@ -294,9 +294,9 @@ void StoreView::buildUi()
     m_catalogHeaderHost = new QWidget(body);
     auto *catalogHeader = new QHBoxLayout(m_catalogHeaderHost);
     catalogHeader->setContentsMargins(0, 0, 0, 0);
-    auto *catalogTitle = new QLabel(QStringLiteral("CATÁLOGO DISPONIBLE"), body);
+    auto *catalogTitle = new QLabel(QStringLiteral("CATÁLOGO"), body);
     catalogTitle->setObjectName(QStringLiteral("StoreSectionTitle"));
-    m_catalogMeta = new QLabel(QStringLiteral("Cargando catálogo…"), body);
+    m_catalogMeta = new QLabel(QStringLiteral("Cargando…"), body);
     m_catalogMeta->setObjectName(QStringLiteral("StoreMuted"));
     catalogHeader->addWidget(catalogTitle);
     catalogHeader->addStretch();
@@ -313,21 +313,21 @@ void StoreView::buildUi()
     m_catalogHost->setObjectName(QStringLiteral("StoreCatalogHost"));
     m_catalogGrid = new QGridLayout(m_catalogHost);
     m_catalogGrid->setContentsMargins(0, 0, 0, 0);
-    m_catalogGrid->setHorizontalSpacing(12);
-    m_catalogGrid->setVerticalSpacing(12);
+    m_catalogGrid->setHorizontalSpacing(8);
+    m_catalogGrid->setVerticalSpacing(8);
     bodyLayout->addWidget(m_catalogHost);
 
     m_pagerHost = new QWidget(body);
     auto *pager = new QHBoxLayout(m_pagerHost);
-    pager->setContentsMargins(2, 0, 2, 0);
+    pager->setContentsMargins(0, 0, 0, 0);
     m_previousPage = new QPushButton(QStringLiteral("‹"), body);
     m_previousPage->setObjectName(QStringLiteral("StorePagerButton"));
-    m_previousPage->setFixedSize(34, 32);
+    m_previousPage->setFixedSize(30, 28);
     m_pageLabel = new QLabel(QStringLiteral("1 / 1"), body);
     m_pageLabel->setObjectName(QStringLiteral("StorePageLabel"));
     m_nextPage = new QPushButton(QStringLiteral("›"), body);
     m_nextPage->setObjectName(QStringLiteral("StorePagerButton"));
-    m_nextPage->setFixedSize(34, 32);
+    m_nextPage->setFixedSize(30, 28);
     pager->addStretch();
     pager->addWidget(m_previousPage);
     pager->addWidget(m_pageLabel);
@@ -336,23 +336,23 @@ void StoreView::buildUi()
 
     m_lowerHost = new QWidget(body);
     auto *lower = new QHBoxLayout(m_lowerHost);
-    lower->setSpacing(12);
+    lower->setSpacing(8);
     auto makePanel = [&](const QString &title, QVBoxLayout *&layout) {
         auto *panel = new QFrame(body);
         panel->setObjectName(QStringLiteral("StorePanel"));
         auto *panelLayout = new QVBoxLayout(panel);
-        panelLayout->setContentsMargins(17, 15, 17, 15);
-        panelLayout->setSpacing(8);
+        panelLayout->setContentsMargins(12, 10, 12, 10);
+        panelLayout->setSpacing(6);
         auto *label = new QLabel(title, panel);
         label->setObjectName(QStringLiteral("StoreSectionTitle"));
         panelLayout->addWidget(label);
         layout = new QVBoxLayout;
-        layout->setSpacing(4);
+        layout->setSpacing(3);
         panelLayout->addLayout(layout);
         return panel;
     };
-    lower->addWidget(makePanel(QStringLiteral("INVENTARIO ACTIVADO"), m_inventoryLayout), 1);
-    lower->addWidget(makePanel(QStringLiteral("ACTIVIDAD RECIENTE"), m_transactionsLayout), 1);
+    lower->addWidget(makePanel(QStringLiteral("INVENTARIO"), m_inventoryLayout), 1);
+    lower->addWidget(makePanel(QStringLiteral("ACTIVIDAD"), m_transactionsLayout), 1);
     bodyLayout->addWidget(m_lowerHost);
 
     scroll->setWidget(body);
@@ -484,10 +484,10 @@ void StoreView::renderCatalog()
         auto *empty = new QFrame(m_catalogHost);
         empty->setObjectName(QStringLiteral("StoreEmptyState"));
         auto *layout = new QVBoxLayout(empty);
-        layout->setContentsMargins(22, 28, 22, 28);
-        auto *title = new QLabel(QStringLiteral("No hay artículos para estos filtros"), empty);
+        layout->setContentsMargins(18, 20, 18, 20);
+        auto *title = new QLabel(QStringLiteral("No hay artículos"), empty);
         title->setObjectName(QStringLiteral("StoreEmptyTitle"));
-        auto *text = new QLabel(QStringLiteral("Prueba otra búsqueda o vuelve a actualizar el catálogo."), empty);
+        auto *text = new QLabel(QStringLiteral("Prueba otra búsqueda o vuelve a actualizar."), empty);
         text->setObjectName(QStringLiteral("StoreMuted"));
         text->setAlignment(Qt::AlignCenter);
         layout->addWidget(title);
@@ -497,7 +497,7 @@ void StoreView::renderCatalog()
         return;
     }
 
-    const int columns = m_catalogHost->width() >= 920 ? 3 : (m_catalogHost->width() >= 580 ? 2 : 1);
+    const int columns = m_catalogHost->width() >= 800 ? 3 : (m_catalogHost->width() >= 520 ? 2 : 1);
     for (int index = 0; index < m_catalog.size(); ++index)
         m_catalogGrid->addWidget(createProductCard(m_catalog.at(index)), index / columns, index % columns);
     for (int column = 0; column < columns; ++column)
@@ -509,11 +509,11 @@ QWidget *StoreView::createProductCard(const StoreCatalogItemData &item)
 {
     auto *card = new QFrame(m_catalogHost);
     card->setObjectName(QStringLiteral("StoreProductCard"));
-    card->setMinimumHeight(226);
+    card->setMinimumHeight(180);
     addShadow(card);
     auto *layout = new QVBoxLayout(card);
-    layout->setContentsMargins(16, 15, 16, 14);
-    layout->setSpacing(7);
+    layout->setContentsMargins(12, 10, 12, 10);
+    layout->setSpacing(5);
 
     auto *top = new QHBoxLayout;
     auto *type = new QLabel(productType(item.productType), card);
@@ -530,7 +530,7 @@ QWidget *StoreView::createProductCard(const StoreCatalogItemData &item)
     auto *name = new QLabel(item.name.isEmpty() ? QStringLiteral("Artículo Dota 2") : item.name, card);
     name->setObjectName(QStringLiteral("StoreProductName"));
     name->setWordWrap(true);
-    name->setMinimumHeight(42);
+    name->setMinimumHeight(32);
     layout->addWidget(name);
     auto *description = new QLabel(item.description.isEmpty()
                                        ? QStringLiteral("Artículo cosmético para tu inventario.")
@@ -538,7 +538,7 @@ QWidget *StoreView::createProductCard(const StoreCatalogItemData &item)
                                    card);
     description->setObjectName(QStringLiteral("StoreProductDescription"));
     description->setWordWrap(true);
-    description->setMaximumHeight(40);
+    description->setMaximumHeight(32);
     layout->addWidget(description);
 
     if (!item.heroes.isEmpty())
@@ -552,11 +552,11 @@ QWidget *StoreView::createProductCard(const StoreCatalogItemData &item)
     }
     else
     {
-        layout->addSpacing(18);
+        layout->addSpacing(12);
     }
 
     auto *bottom = new QHBoxLayout;
-    bottom->setSpacing(8);
+    bottom->setSpacing(6);
     auto *priceBox = new QVBoxLayout;
     priceBox->setSpacing(0);
     const auto market = hasMarketPrice(item);
@@ -592,7 +592,7 @@ void StoreView::renderInventory(const QVector<StoreInventoryItemData> &items)
     clearLayout(m_inventoryLayout);
     if (items.isEmpty())
     {
-        auto *empty = new QLabel(QStringLiteral("Todavía no tienes artículos activados."), this);
+        auto *empty = new QLabel(QStringLiteral("Sin artículos activados."), this);
         empty->setObjectName(QStringLiteral("StoreMuted"));
         m_inventoryLayout->addWidget(empty);
         return;
@@ -605,7 +605,7 @@ void StoreView::renderInventory(const QVector<StoreInventoryItemData> &items)
         auto *row = new QFrame(this);
         row->setObjectName(QStringLiteral("StoreListRow"));
         auto *rowLayout = new QHBoxLayout(row);
-        rowLayout->setContentsMargins(9, 7, 9, 7);
+        rowLayout->setContentsMargins(8, 5, 8, 5);
         auto *name = new QLabel(QStringLiteral("Definición %1").arg(item.defIndex), row);
         name->setObjectName(QStringLiteral("StoreListPrimary"));
         auto *quantity = new QLabel(QStringLiteral("×%1").arg(item.quantity), row);
@@ -622,7 +622,7 @@ void StoreView::renderTransactions(const QVector<StoreTransactionData> &items)
     clearLayout(m_transactionsLayout);
     if (items.isEmpty())
     {
-        auto *empty = new QLabel(QStringLiteral("Aún no hay movimientos."), this);
+        auto *empty = new QLabel(QStringLiteral("Sin movimientos."), this);
         empty->setObjectName(QStringLiteral("StoreMuted"));
         m_transactionsLayout->addWidget(empty);
         return;
@@ -635,8 +635,8 @@ void StoreView::renderTransactions(const QVector<StoreTransactionData> &items)
         auto *row = new QFrame(this);
         row->setObjectName(QStringLiteral("StoreListRow"));
         auto *rowLayout = new QHBoxLayout(row);
-        rowLayout->setContentsMargins(9, 7, 9, 7);
-        auto *name = new QLabel(item.reference.isEmpty() ? QStringLiteral("Movimiento de tienda") : item.reference, row);
+        rowLayout->setContentsMargins(8, 5, 8, 5);
+        auto *name = new QLabel(item.reference.isEmpty() ? QStringLiteral("Movimiento") : item.reference, row);
         name->setObjectName(QStringLiteral("StoreListPrimary"));
         name->setWordWrap(true);
         auto *amount = new QLabel(QStringLiteral("%1").arg(dollars(item.amountDollars)), row);
@@ -662,8 +662,8 @@ void StoreView::renderSessionGate(const QString &title, const QString &message)
     auto *gate = new QFrame(m_catalogHost);
     gate->setObjectName(QStringLiteral("StoreSessionGate"));
     auto *layout = new QVBoxLayout(gate);
-    layout->setContentsMargins(30, 30, 30, 30);
-    layout->setSpacing(8);
+    layout->setContentsMargins(20, 20, 20, 20);
+    layout->setSpacing(6);
     auto *heading = new QLabel(title, gate);
     heading->setObjectName(QStringLiteral("StoreEmptyTitle"));
     heading->setAlignment(Qt::AlignCenter);
@@ -673,14 +673,14 @@ void StoreView::renderSessionGate(const QString &title, const QString &message)
     copy->setWordWrap(true);
     auto *login = new QPushButton(QStringLiteral("INICIAR SESIÓN"), gate);
     login->setObjectName(QStringLiteral("StoreBuyButton"));
-    login->setMinimumWidth(180);
+    login->setMinimumWidth(150);
     connect(login, &QPushButton::clicked, this, &StoreView::loginRequested);
     layout->addWidget(heading);
     layout->addWidget(copy);
-    layout->addSpacing(5);
+    layout->addSpacing(4);
     layout->addWidget(login, 0, Qt::AlignCenter);
     m_catalogGrid->addWidget(gate, 0, 0, 1, 3);
-    m_catalogMeta->setText(QStringLiteral("La tienda usa la sesión del launcher"));
+    m_catalogMeta->setText(QStringLiteral("Tienda offline"));
 }
 
 void StoreView::setBusy(bool busy)
@@ -720,7 +720,7 @@ void StoreView::buy(quint32 productId)
     m_busy = true;
     setBusy(true);
     m_stateLabel->setObjectName(QStringLiteral("StoreInfo"));
-    m_stateLabel->setText(QStringLiteral("Procesando compra y sincronizando tu inventario…"));
+    m_stateLabel->setText(QStringLiteral("Procesando compra…"));
     m_stateLabel->show();
     m_server.purchaseStoreItem(m_token, productId, 1);
 }
@@ -732,7 +732,7 @@ void StoreView::handleStoreError(const QString &error)
         m_sessionInvalid = true;
         m_busy = false;
         m_walletValue->setText(QStringLiteral("—"));
-        m_walletMeta->setText(QStringLiteral("Vuelve a iniciar sesión para consultar tu saldo"));
+        m_walletMeta->setText(QStringLiteral("Vuelve a iniciar sesión"));
         renderSessionGate(QStringLiteral("Sesión expirada"),
                           QStringLiteral("Vuelve a iniciar sesión para continuar usando la tienda."));
         m_stateLabel->hide();
