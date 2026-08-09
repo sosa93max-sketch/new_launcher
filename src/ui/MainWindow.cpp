@@ -26,7 +26,6 @@
 #include <QStringList>
 #include <QStackedWidget>
 #include <QStatusBar>
-#include <QStyle>
 #include <QVBoxLayout>
 
 #include <algorithm>
@@ -63,9 +62,9 @@ QPixmap circularAvatar(const QByteArray &png, int size)
 void addCardShadow(QWidget *card)
 {
     auto *shadow = new QGraphicsDropShadowEffect(card);
-    shadow->setBlurRadius(30);
-    shadow->setOffset(0, 8);
-    shadow->setColor(QColor(0, 0, 0, 115));
+    shadow->setBlurRadius(20);
+    shadow->setOffset(0, 4);
+    shadow->setColor(QColor(0, 0, 0, 80));
     card->setGraphicsEffect(shadow);
 }
 }
@@ -76,8 +75,8 @@ MainWindow::MainWindow(ConfigStore &store, ServerClient &server, QWidget *parent
     , m_server(server)
 {
     setWindowTitle(QStringLiteral("D2Max Launcher"));
-    resize(1240, 820);
-    setMinimumSize(1050, 700);
+    resize(1100, 720);
+    setMinimumSize(950, 620);
     buildUi();
 
     applyCurrentProfile();
@@ -102,27 +101,27 @@ void MainWindow::buildUi()
 void MainWindow::buildDashboardUi()
 {
     setWindowTitle(QStringLiteral("D2Max · Centro de juego"));
-    resize(1240, 820);
-    setMinimumSize(1050, 700);
+    resize(1100, 720);
+    setMinimumSize(950, 620);
 
     auto *central = new QWidget(this);
     central->setObjectName(QStringLiteral("LauncherRoot"));
     auto *shell = new QHBoxLayout(central);
-    shell->setContentsMargins(22, 22, 22, 16);
-    shell->setSpacing(20);
+    shell->setContentsMargins(14, 14, 14, 10);
+    shell->setSpacing(14);
 
     auto *sidebar = new QFrame(central);
     sidebar->setObjectName(QStringLiteral("Sidebar"));
-    sidebar->setFixedWidth(222);
+    sidebar->setFixedWidth(180);
     addCardShadow(sidebar);
     auto *sideLayout = new QVBoxLayout(sidebar);
-    sideLayout->setContentsMargins(20, 22, 20, 20);
-    sideLayout->setSpacing(12);
+    sideLayout->setContentsMargins(14, 16, 14, 14);
+    sideLayout->setSpacing(10);
 
     auto *brandRow = new QHBoxLayout;
     auto *brandMark = new QLabel(QStringLiteral("D2"), sidebar);
     brandMark->setObjectName(QStringLiteral("BrandMark"));
-    brandMark->setFixedSize(44, 44);
+    brandMark->setFixedSize(36, 36);
     brandMark->setAlignment(Qt::AlignCenter);
     auto *brandText = new QVBoxLayout;
     auto *brandName = new QLabel(QStringLiteral("D2MAX"), sidebar);
@@ -132,11 +131,11 @@ void MainWindow::buildDashboardUi()
     brandText->addWidget(brandName);
     brandText->addWidget(brandCaption);
     brandRow->addWidget(brandMark);
-    brandRow->addSpacing(10);
+    brandRow->addSpacing(8);
     brandRow->addLayout(brandText);
     brandRow->addStretch();
     sideLayout->addLayout(brandRow);
-    sideLayout->addSpacing(22);
+    sideLayout->addSpacing(16);
 
     auto *navigationLabel = new QLabel(QStringLiteral("NAVEGACIÓN"), sidebar);
     navigationLabel->setObjectName(QStringLiteral("SideCaption"));
@@ -144,18 +143,18 @@ void MainWindow::buildDashboardUi()
 
     m_homeButton = new QPushButton(QStringLiteral("  INICIO"), sidebar);
     m_homeButton->setObjectName(QStringLiteral("NavButtonActive"));
-    m_homeButton->setMinimumHeight(44);
+    m_homeButton->setMinimumHeight(38);
     sideLayout->addWidget(m_homeButton);
 
     m_storeButton = new QPushButton(QStringLiteral("  TIENDA"), sidebar);
     m_storeButton->setObjectName(QStringLiteral("NavButton"));
-    m_storeButton->setMinimumHeight(44);
+    m_storeButton->setMinimumHeight(38);
     sideLayout->addWidget(m_storeButton);
 
     auto *sideInfo = new QFrame(sidebar);
     sideInfo->setObjectName(QStringLiteral("SidebarStatus"));
     auto *sideInfoLayout = new QVBoxLayout(sideInfo);
-    sideInfoLayout->setContentsMargins(13, 12, 13, 12);
+    sideInfoLayout->setContentsMargins(10, 10, 10, 10);
     auto *sideInfoTitle = new QLabel(QStringLiteral("TU SESIÓN"), sideInfo);
     sideInfoTitle->setObjectName(QStringLiteral("SideCaption"));
     auto *sideInfoText = new QLabel(QStringLiteral("El launcher mantiene tu acceso y prepara Dota 2 con la configuración guardada."), sideInfo);
@@ -171,7 +170,7 @@ void MainWindow::buildDashboardUi()
     sideLayout->addWidget(sideVersion);
     auto *logoutButton = new QPushButton(QStringLiteral("CERRAR SESIÓN"), sidebar);
     logoutButton->setObjectName(QStringLiteral("GhostButton"));
-    logoutButton->setMinimumHeight(40);
+    logoutButton->setMinimumHeight(34);
     sideLayout->addWidget(logoutButton);
     shell->addWidget(sidebar);
 
@@ -186,8 +185,8 @@ void MainWindow::buildDashboardUi()
     auto *content = new QWidget;
     content->setObjectName(QStringLiteral("DashboardPage"));
     auto *contentLayout = new QVBoxLayout(content);
-    contentLayout->setContentsMargins(4, 4, 12, 18);
-    contentLayout->setSpacing(18);
+    contentLayout->setContentsMargins(0, 0, 8, 12);
+    contentLayout->setSpacing(12);
 
     auto *topbar = new QHBoxLayout;
     auto *topCopy = new QVBoxLayout;
@@ -208,8 +207,8 @@ void MainWindow::buildDashboardUi()
     hero->setObjectName(QStringLiteral("HeroCard"));
     addCardShadow(hero);
     auto *heroLayout = new QHBoxLayout(hero);
-    heroLayout->setContentsMargins(30, 28, 24, 24);
-    heroLayout->setSpacing(24);
+    heroLayout->setContentsMargins(20, 18, 18, 18);
+    heroLayout->setSpacing(18);
 
     auto *heroCopy = new QVBoxLayout;
     auto *heroEyebrow = new QLabel(QStringLiteral("D2MAX  /  PARTIDA LOCAL"), hero);
@@ -220,31 +219,31 @@ void MainWindow::buildDashboardUi()
     auto *heroText = new QLabel(QStringLiteral("Tu cuenta, tu inventario y tu servidor en un solo lugar. Entra a Dota 2 cuando estés listo."), hero);
     heroText->setObjectName(QStringLiteral("HeroText"));
     heroText->setWordWrap(true);
-    heroText->setMaximumWidth(510);
+    heroText->setMaximumWidth(420);
     m_playButton = new QPushButton(QStringLiteral("JUGAR DOTA 2"), hero);
     m_playButton->setObjectName(QStringLiteral("LaunchButton"));
-    m_playButton->setMinimumHeight(52);
-    m_playButton->setMinimumWidth(205);
+    m_playButton->setMinimumHeight(44);
+    m_playButton->setMinimumWidth(180);
     heroCopy->addWidget(heroEyebrow);
     heroCopy->addWidget(heroTitle);
     heroCopy->addWidget(heroText);
-    heroCopy->addSpacing(13);
+    heroCopy->addSpacing(10);
     heroCopy->addWidget(m_playButton, 0, Qt::AlignLeft);
     heroCopy->addStretch();
     heroLayout->addLayout(heroCopy, 1);
 
     auto *accountCard = new QFrame(hero);
     accountCard->setObjectName(QStringLiteral("AccountCard"));
-    accountCard->setMinimumWidth(270);
+    accountCard->setMinimumWidth(220);
     auto *accountLayout = new QVBoxLayout(accountCard);
-    accountLayout->setContentsMargins(18, 18, 18, 18);
-    accountLayout->setSpacing(10);
+    accountLayout->setContentsMargins(12, 12, 12, 12);
+    accountLayout->setSpacing(8);
     auto *accountCaption = new QLabel(QStringLiteral("CUENTA ACTIVA"), accountCard);
     accountCaption->setObjectName(QStringLiteral("SideCaption"));
     auto *accountRow = new QHBoxLayout;
     m_avatar = new QLabel(accountCard);
     m_avatar->setObjectName(QStringLiteral("AvatarLabel"));
-    m_avatar->setFixedSize(72, 72);
+    m_avatar->setFixedSize(56, 56);
     m_avatar->setAlignment(Qt::AlignCenter);
     m_avatar->setText(QStringLiteral("?"));
     auto *infoCol = new QVBoxLayout;
@@ -257,7 +256,7 @@ void MainWindow::buildDashboardUi()
     infoCol->addWidget(m_accountName);
     infoCol->addWidget(m_accountMeta);
     accountRow->addWidget(m_avatar);
-    accountRow->addSpacing(12);
+    accountRow->addSpacing(10);
     accountRow->addLayout(infoCol, 1);
     accountLayout->addWidget(accountCaption);
     accountLayout->addLayout(accountRow);
@@ -265,12 +264,12 @@ void MainWindow::buildDashboardUi()
     contentLayout->addWidget(hero);
 
     auto *metrics = new QHBoxLayout;
-    metrics->setSpacing(12);
+    metrics->setSpacing(8);
     auto makeMetric = [&](const QString &label, QLabel *&value) {
         auto *card = new QFrame(content);
         card->setObjectName(QStringLiteral("MetricCard"));
         auto *cardLayout = new QVBoxLayout(card);
-        cardLayout->setContentsMargins(17, 14, 17, 14);
+        cardLayout->setContentsMargins(12, 10, 12, 10);
         auto *caption = new QLabel(label, card);
         caption->setObjectName(QStringLiteral("MetricLabel"));
         value = new QLabel(QStringLiteral("--"), card);
@@ -284,7 +283,7 @@ void MainWindow::buildDashboardUi()
     auto *regionCard = new QFrame(content);
     regionCard->setObjectName(QStringLiteral("MetricCard"));
     auto *regionLayout = new QVBoxLayout(regionCard);
-    regionLayout->setContentsMargins(17, 14, 17, 14);
+    regionLayout->setContentsMargins(12, 10, 12, 10);
     auto *regionCaption = new QLabel(QStringLiteral("ENTORNO"), regionCard);
     regionCaption->setObjectName(QStringLiteral("MetricLabel"));
     auto *regionValue = new QLabel(QStringLiteral("SERVIDOR D2MAX"), regionCard);
@@ -298,8 +297,8 @@ void MainWindow::buildDashboardUi()
     settings->setObjectName(QStringLiteral("SurfaceCard"));
     addCardShadow(settings);
     auto *settingsLayout = new QVBoxLayout(settings);
-    settingsLayout->setContentsMargins(20, 17, 20, 17);
-    settingsLayout->setSpacing(12);
+    settingsLayout->setContentsMargins(14, 12, 14, 12);
+    settingsLayout->setSpacing(8);
     auto *settingsHead = new QHBoxLayout;
     auto *settingsTitle = new QLabel(QStringLiteral("CONFIGURACIÓN DE SESIÓN"), settings);
     settingsTitle->setObjectName(QStringLiteral("SectionLabel"));
@@ -314,7 +313,7 @@ void MainWindow::buildDashboardUi()
     pathTitle->setObjectName(QStringLiteral("FieldLabel"));
     settingsLayout->addWidget(pathTitle);
     auto *pathRow = new QHBoxLayout;
-    pathRow->setSpacing(8);
+    pathRow->setSpacing(6);
     m_dotaPath = new QLineEdit(m_store.config().dota2Path, settings);
     m_dotaPath->setObjectName(QStringLiteral("PathField"));
     m_dotaPath->setPlaceholderText(QStringLiteral("Ruta a dota2.exe o a la instalación de Dota 2"));
@@ -331,7 +330,7 @@ void MainWindow::buildDashboardUi()
     serverTitle->setObjectName(QStringLiteral("FieldLabel"));
     settingsLayout->addWidget(serverTitle);
     auto *serverRow = new QHBoxLayout;
-    serverRow->setSpacing(8);
+    serverRow->setSpacing(6);
     m_serverUrl = new QLineEdit(m_store.config().serverUrl, settings);
     m_serverUrl->setObjectName(QStringLiteral("PathField"));
     m_serverUrl->setPlaceholderText(QStringLiteral("http://127.0.0.1:27015"));
@@ -342,7 +341,7 @@ void MainWindow::buildDashboardUi()
     settingsLayout->addLayout(serverRow);
 
     auto *argsRow = new QHBoxLayout;
-    argsRow->setSpacing(18);
+    argsRow->setSpacing(14);
     m_console = new QCheckBox(QStringLiteral("Consola -console"), settings);
     m_console->setChecked(m_store.config().enableConsole);
     m_novid = new QCheckBox(QStringLiteral("Saltar intro -novid"), settings);
@@ -359,14 +358,14 @@ void MainWindow::buildDashboardUi()
     auto *footerCard = new QFrame(content);
     footerCard->setObjectName(QStringLiteral("FooterCard"));
     auto *footerLayout = new QHBoxLayout(footerCard);
-    footerLayout->setContentsMargins(16, 11, 16, 11);
+    footerLayout->setContentsMargins(12, 8, 12, 8);
     auto *footerDot = new QLabel(QStringLiteral("●"), footerCard);
     footerDot->setObjectName(QStringLiteral("FooterDot"));
     auto *footerText = new QLabel(QStringLiteral("La tienda está integrada en el launcher y comparte tu sesión con Dota 2."), footerCard);
     footerText->setObjectName(QStringLiteral("SubtitleLabel"));
     footerText->setWordWrap(true);
     footerLayout->addWidget(footerDot);
-    footerLayout->addSpacing(8);
+    footerLayout->addSpacing(6);
     footerLayout->addWidget(footerText, 1);
     contentLayout->addWidget(footerCard);
     contentLayout->addStretch();
@@ -494,7 +493,7 @@ void MainWindow::buildDashboardUi()
             [this](bool ok, const QByteArray &png) {
                 if (!ok)
                     return;
-                const auto pixmap = circularAvatar(png, 72);
+                const auto pixmap = circularAvatar(png, 56);
                 if (pixmap.isNull())
                     return;
                 m_avatar->setPixmap(pixmap);
@@ -584,9 +583,6 @@ void MainWindow::validateCurrentSession()
 
 bool MainWindow::addAccount()
 {
-    // No owner window: an owned (parented) dialog gets no taskbar button on
-    // Windows. A parentless application-modal dialog is still modal and appears
-    // in the taskbar, so it can be minimized and restored normally.
     LoginDialog dialog(m_store.config(), m_server);
     if (dialog.exec() != QDialog::Accepted)
         return false;
@@ -657,9 +653,6 @@ void MainWindow::logout()
         m_storeView->setSessionToken(QString());
     showDashboard();
 
-    // The dashboard is only usable while logged in: closing the session
-    // requires logging back in, and cancelling closes the launcher. Hide it
-    // while the login dialog is up so it does not stay visible behind it.
     hide();
     LoginDialog dialog(m_store.config(), m_server);
     if (dialog.exec() == QDialog::Accepted)
@@ -715,8 +708,8 @@ void MainWindow::play()
     m_store.save();
 
     m_playButton->setEnabled(false);
-    m_playButton->setText(QStringLiteral("LANZANDO..."));
-    m_statusBar->showMessage(QStringLiteral("Lanzando Dota 2..."));
+    m_playButton->setText(QStringLiteral("LANZANDO…"));
+    m_statusBar->showMessage(QStringLiteral("Lanzando Dota 2…"));
 
     const auto outcome = m_launcher.launch(dotaPath, *it, m_store.config(),
                                            m_store.config().serverUrl);
