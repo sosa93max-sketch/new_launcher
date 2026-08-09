@@ -749,29 +749,86 @@ QLabel#StoreEmptyTitle {
     qproperty-alignment: AlignCenter;
 }
 
-/* =========================================================
-   RANKING (Compact)
-   ========================================================= */
-QScrollArea#RankingScroll {
-    background: transparent;
-    border: none;
+/* ---------- Ranking compacto ---------- */
+QFrame#RankingHeroCard {
+    min-height: 80px;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
 }
-QScrollArea#RankingScroll QWidget#qt_scrollarea_viewport {
-    background: transparent;
+QLabel#RankingOverline {
+    color: #34d399;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
 }
-QWidget#RankingPage, QWidget#RankingBody, QWidget#RankingListHost {
-    background: transparent;
-}
-QLabel#RankingTitle {
+QLabel#RankingHeroTitle {
     color: #f8fafc;
     font-size: 20px;
     font-weight: 800;
-    letter-spacing: 1.2px;
 }
-QLabel#RankingSubtitle, QLabel#RankingMuted {
+QLabel#RankingHeroText {
+    color: #64748b;
+    font-size: 11px;
+}
+
+QFrame#RankingToolbar {
+    background: transparent;
+}
+
+QLabel#RankingSectionTitle {
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+}
+QLabel#RankingMuted {
     color: #475569;
     font-size: 10px;
 }
+
+QFrame#RankingRow {
+    background: #0b1016;
+    border: 1px solid #131b26;
+    border-radius: 8px;
+}
+QFrame#RankingRow:hover {
+    background: #111f35;
+    border-color: #1e293b;
+}
+
+QLabel#RankingPosition {
+    color: #475569;
+    font-size: 12px;
+    font-weight: 800;
+}
+QLabel#RankingPlayerName {
+    color: #f1f5f9;
+    font-size: 13px;
+    font-weight: 700;
+}
+QLabel#RankingPlayerMeta {
+    color: #64748b;
+    font-size: 10px;
+}
+QLabel#RankingOnlineDot {
+    color: #34d399;
+    font-size: 10px;
+}
+QLabel#RankingOfflineDot {
+    color: #475569;
+    font-size: 10px;
+}
+
+QLabel#RankingEmptyTitle {
+    color: #e2e8f0;
+    font-size: 15px;
+    font-weight: 800;
+    qproperty-alignment: AlignCenter;
+}
+
 QPushButton#RankingBackButton {
     color: #94a3b8;
     background: #0f172a;
@@ -786,75 +843,47 @@ QPushButton#RankingBackButton:hover {
     background: #1e293b;
     border-color: #38bdf8;
 }
-QPushButton#RankingRefreshButton, QPushButton#RankingLoginButton {
+
+QPushButton#RankingRefreshButton {
+    color: #b8cbe2;
+    background: #131b26;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .5px;
+}
+QPushButton#RankingRefreshButton:hover {
+    color: #ffffff;
+    background: #1e293b;
+    border-color: #38bdf8;
+}
+
+QPushButton#RankingLoginButton {
     min-height: 28px;
     color: #020617;
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                                 stop:0 #34d399, stop:1 #0ea5e9);
     border: none;
     border-radius: 8px;
-    padding: 6px 12px;
+    padding: 6px 10px;
     font-size: 9px;
     font-weight: 900;
     letter-spacing: .5px;
 }
-QPushButton#RankingRefreshButton:hover, QPushButton#RankingLoginButton:hover {
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                                stop:0 #6ee7b7, stop:1 #38bdf8);
-}
-QPushButton#RankingRefreshButton:disabled {
-    color: #475569;
-    background: #131b26;
-    border: 1px solid #1e293b;
+
+QFrame#RankingSessionGate,
+QFrame#RankingEmptyState,
+QFrame#RankingLoadingState {
+    min-height: 120px;
+    background: #0b1016;
+    border: 1px dashed #1e293b;
+    border-radius: 12px;
 }
 
-QFrame#RankingHeroCard {
-    min-height: 96px;
-    background: #0f172a;
-    border: 1px solid #1e293b;
-    border-radius: 14px;
-}
-QLabel#RankingOverline {
-    color: #34d399;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 1.2px;
-}
-QLabel#RankingHeroTitle {
-    color: #f8fafc;
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -.3px;
-}
-QLabel#RankingHeroText {
-    color: #64748b;
-    font-size: 11px;
-}
-QFrame#RankingHeroBadge {
-    min-width: 150px;
-    background: #0b1016;
-    border: 1px solid #1e293b;
-    border-radius: 10px;
-}
-QLabel#RankingBadgeTitle {
-    color: #e2e8f0;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 1px;
-}
-
-QFrame#RankingToolbar {
-    background: #0b1016;
-    border: 1px solid #131b26;
-    border-radius: 10px;
-}
-QLabel#RankingSectionTitle {
-    color: #94a3b8;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 1.2px;
-}
-QLabel#RankingInfo, QLabel#RankingError {
+QLabel#RankingInfo,
+QLabel#RankingError {
     border-radius: 8px;
     padding: 6px 10px;
     font-size: 10px;
@@ -869,87 +898,4 @@ QLabel#RankingError {
     color: #fca5a5;
     background: rgba(220, 38, 38, 0.08);
     border: 1px solid rgba(220, 38, 38, 0.15);
-}
-
-QFrame#RankingRow {
-    min-height: 64px;
-    background: #0f172a;
-    border: 1px solid #1e293b;
-    border-radius: 10px;
-}
-QFrame#RankingRow:hover {
-    background: #111f35;
-    border-color: rgba(56, 189, 248, 0.35);
-}
-QLabel#RankingPosition {
-    color: #64748b;
-    font-size: 11px;
-    font-weight: 900;
-}
-QLabel#RankingMedalIcon {
-    background: #0b1016;
-    border: 1px solid #1e293b;
-    border-radius: 8px;
-}
-QLabel#RankingPlayerName {
-    color: #f1f5f9;
-    font-size: 13px;
-    font-weight: 800;
-}
-QLabel#RankingPlayerHandle {
-    color: #64748b;
-    font-size: 9px;
-}
-QLabel#RankingOnline, QLabel#RankingOffline {
-    font-size: 9px;
-    font-weight: 800;
-}
-QLabel#RankingOnline {
-    color: #34d399;
-}
-QLabel#RankingOffline {
-    color: #475569;
-}
-QLabel#RankingMedalName {
-    color: #e2e8f0;
-    font-size: 10px;
-    font-weight: 800;
-}
-QLabel#RankingStars {
-    color: #fbbf24;
-    font-size: 10px;
-    font-weight: 900;
-}
-QLabel#RankingMmr {
-    color: #fbbf24;
-    font-size: 16px;
-    font-weight: 900;
-}
-QLabel#RankingMetricLabel {
-    color: #475569;
-    font-size: 8px;
-    font-weight: 800;
-    letter-spacing: 1px;
-}
-QLabel#RankingStats {
-    color: #94a3b8;
-    font-size: 9px;
-    line-height: 13px;
-}
-
-QFrame#RankingEmptyState, QFrame#RankingSessionGate, QFrame#RankingLoadingState {
-    min-height: 160px;
-    background: #0b1016;
-    border: 1px dashed #1e293b;
-    border-radius: 12px;
-}
-QLabel#RankingEmptyIcon {
-    color: #fbbf24;
-    font-size: 28px;
-    font-weight: 900;
-}
-QLabel#RankingEmptyTitle {
-    color: #e2e8f0;
-    font-size: 15px;
-    font-weight: 800;
 }
