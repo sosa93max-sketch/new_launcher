@@ -2,6 +2,7 @@
 
 #include <QColor>
 #include <QFrame>
+#include <QStyle>
 #include <QFont>
 #include <QGraphicsDropShadowEffect>
 #include <QHBoxLayout>
